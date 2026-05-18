@@ -80,15 +80,21 @@ input { font-family:inherit; }
 .num-input-wrap .val::-webkit-inner-spin-button { -webkit-appearance:none; margin:0; }
 
 .section-divider { height:1px; background:var(--gray200); margin:14px 0; }
-.meal-section { background:#f0f4ff; border:1px solid #c8d6f0; border-radius:10px; padding:12px; margin-bottom:12px; }
+.card-columns { display:flex; gap:12px; margin-bottom:12px; }
+.meal-section { background:#f0f4ff; border:1px solid #c8d6f0; border-radius:10px; padding:12px; flex:3; min-width:0; }
 .meal-section-title { font-size:13px; font-weight:700; color:var(--blue); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
-.shuttle-section { background:#f0faf0; border:1px solid #c0e0c0; border-radius:10px; padding:12px; margin-bottom:12px; }
+.shuttle-section { background:#f0faf0; border:1px solid #c0e0c0; border-radius:10px; padding:12px; flex:2; min-width:0; display:flex; flex-direction:column; }
 .shuttle-section-title { font-size:13px; font-weight:700; color:var(--green); margin-bottom:10px; display:flex; align-items:center; gap:6px; }
 
 .kids-section { background:var(--gray50); border:1px solid var(--gray200); border-radius:8px; padding:10px 12px; margin-top:10px; }
 .kids-section-title { font-size:13px; font-weight:700; color:var(--navy); margin-bottom:8px; display:flex; align-items:center; gap:6px; }
 .kids-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
 .kids-note { font-size:10px; color:var(--gray500); margin-top:8px; text-align:center; }
+
+@media (max-width: 420px) {
+  .card-columns { flex-direction:column; }
+  .shuttle-section { flex:unset; }
+}
 
 .warning-box { background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:8px 12px; font-size:12px; color:#f57f17; margin-bottom:10px; }
 .note-input { width:100%; padding:10px 12px; border:1px solid var(--gray200); border-radius:8px; font-size:13px; color:var(--gray700); outline:none; }
@@ -308,13 +314,16 @@ function bannerSVG() {
         經銷商午宴及接駁車線上登記
       </text>
       <!-- Date badge -->
-      <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=2027+VICTOR+%E6%98%A5%E5%A4%8F%E6%96%B0%E5%93%81%E5%B1%95%E7%A4%BA%E6%9C%83&dates=20260805T033000Z/20260805T083000Z&details=%E5%8D%88%E5%AE%B4%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%B1%90FOOD%E6%B5%B7%E9%99%B8%E7%99%BE%E5%8C%AF%E9%A4%90%E5%BB%B3(1F)%0A%E5%B1%95%E7%A4%BA%E6%9C%83%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%8A%B1%E7%94%B0%E7%9B%9B%E4%BA%8B%E5%BB%B3(6F)&location=%E5%8F%B0%E5%8C%97%E5%B8%82%E4%B8%AD%E5%B1%B1%E5%8D%80%E6%A4%8D%E7%A6%8F%E8%B7%AF8%E8%99%9F" target="_blank" style="cursor:pointer">
-      <g transform="translate(400,260)">
-        <rect x="-115" y="-20" width="230" height="40" rx="20" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.3)" stroke-width="1.2"/>
-        <text x="0" y="7" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="16" font-weight="600" fill="#fff">
-          📅 ${EVENT.date}  ＋加入行事曆
+      <g transform="translate(400,255)">
+        <rect x="-100" y="-18" width="200" height="36" rx="18" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <text x="0" y="6" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="16" font-weight="600" fill="#fff">
+          📅 ${EVENT.date}
         </text>
       </g>
+      <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=2027+VICTOR+%E6%98%A5%E5%A4%8F%E6%96%B0%E5%93%81%E5%B1%95%E7%A4%BA%E6%9C%83&dates=20260805T033000Z/20260805T083000Z&details=%E5%8D%88%E5%AE%B4%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%B1%90FOOD%E6%B5%B7%E9%99%B8%E7%99%BE%E5%8C%AF%E9%A4%90%E5%BB%B3(1F)%0A%E5%B1%95%E7%A4%BA%E6%9C%83%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%8A%B1%E7%94%B0%E7%9B%9B%E4%BA%8B%E5%BB%B3(6F)&location=%E5%8F%B0%E5%8C%97%E5%B8%82%E4%B8%AD%E5%B1%B1%E5%8D%80%E6%A4%8D%E7%A6%8F%E8%B7%AF8%E8%99%9F" target="_blank" style="cursor:pointer">
+        <text x="400" y="300" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="12" fill="#fff" opacity=".45" letter-spacing="1" text-decoration="underline">
+          ＋加入行事曆
+        </text>
       </a>
       <!-- Corner accents -->
       <rect x="0" y="0" width="4" height="50" fill="#EC6C00" opacity=".7"/>
@@ -387,24 +396,26 @@ function renderDealerCard(d) {
       <span class="dealer-name">${d.name}</span><span class="grade-tag ${GRADE_CLASS[d.grade]}">${d.grade}</span>
       <div style="font-size:12px;color:var(--gray500);margin-top:4px">${d.code}　補助 ${sub} 人</div>
     </div>${total>0?'<span class="registered-badge">已登記</span>':''}</div>
-    <div class="meal-section">
-      <div class="meal-section-title">🍽️ 用餐登記</div>
-      ${numInput(d.code,"adults","大人（含140cm↑）",r.adults||0)}
-      <div class="kids-section">
-        <div class="kids-section-title">👶 小孩（共 ${kids} 位）</div>
-        <div class="kids-grid">
-          ${numInput(d.code,"kidA","80cm 以下",r.kidA||0)}
-          ${numInput(d.code,"kidB","80-100cm",r.kidB||0)}
-          ${numInput(d.code,"kidC","100-140cm",r.kidC||0)}
+    <div class="card-columns">
+      <div class="meal-section">
+        <div class="meal-section-title">🍽️ 用餐登記</div>
+        ${numInput(d.code,"adults","大人（含140cm↑）",r.adults||0)}
+        <div class="kids-section">
+          <div class="kids-section-title">👶 小孩（共 ${kids} 位）</div>
+          <div class="kids-grid">
+            ${numInput(d.code,"kidA","80cm以下",r.kidA||0)}
+            ${numInput(d.code,"kidB","80-100cm",r.kidB||0)}
+            ${numInput(d.code,"kidC","100-140cm",r.kidC||0)}
+          </div>
+          <div class="kids-note">⚠️ 140cm 以上請以「大人」計算</div>
         </div>
-        <div class="kids-note">⚠️ 140cm 以上請以「大人」計算</div>
+      </div>
+      <div class="shuttle-section">
+        <div class="shuttle-section-title">🚌 接駁車</div>
+        ${numInput(d.code,"shuttle","搭乘人數",r.shuttle||0)}
       </div>
     </div>
-    ${over?`<div class="warning-box">⚠️ 超出補助 ${total-sub} 人，需補差額</div>`:''}
-    <div class="shuttle-section">
-      <div class="shuttle-section-title">🚌 接駁車登記</div>
-      ${numInput(d.code,"shuttle","搭乘人數",r.shuttle||0)}
-    </div>
+    ${over?`<div class="warning-box">⚠️ 用餐人數超出補助 ${total-sub} 人，超出部分需自費</div>`:''}
     <input class="note-input" data-code="${d.code}" data-field="note" placeholder="備註（素食、自費、其他...）" value="${r.note||''}">
   </div>`;
 }
