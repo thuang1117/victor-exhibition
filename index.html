@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>VICTOR 新品展示會 — 線上登記</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏸</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<style>
+/* ─────────────────────── VICTOR CI TOKENS ─────────────────────── */
+:root {
+  --blue: #0B308E;
+  --orange: #EC6C00;
+  --navy: #0a1929;
+  --blue-bright: #2148b5;
+  --blue-light: #e8edf7;
+  --white: #ffffff;
+  --gray50: #fafafa;
+  --gray100: #f5f5f5;
+  --gray200: #eeeeee;
+  --gray300: #e0e0e0;
+  --gray500: #9e9e9e;
+  --gray700: #616161;
+  --gray900: #212121;
+  --red: #d32f2f;
+  --green: #2e7d32;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Noto Sans TC', sans-serif; background:var(--gray50); color:var(--gray900); -webkit-font-smoothing:antialiased; }
+button { font-family:inherit; cursor:pointer; }
+input { font-family:inherit; }
+
+/* ─────────────────────── BANNER ──────────────────────────────── */
+.banner { width:100%; overflow:hidden; }
+.banner svg { width:100%; display:block; }
+
+/* ─────────────────────── CARDS ──────────────────────────────── */
+.card { background:var(--white); border-radius:20px; margin:16px; box-shadow:0 2px 16px rgba(11,48,142,0.08); overflow:hidden; }
+.card-pad { padding:20px; }
+.section-label { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; color:var(--navy); }
+.section-label span:first-child { font-size:18px; }
+.divider { height:1px; background:var(--gray200); margin:0 20px; }
+
+/* ─────────────────────── REP SELECT ─────────────────────────── */
+.rep-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+.rep-btn { padding:14px 8px; border:2px solid var(--gray200); border-radius:12px; background:var(--white); font-size:15px; font-weight:500; color:var(--navy); transition:all 0.2s; }
+.rep-btn:hover { border-color:var(--blue); background:var(--blue-light); }
+
+/* ─────────────────────── FORM PAGE ──────────────────────────── */
+.sticky-header { background:var(--navy); padding:16px 20px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:100; }
+.sticky-header h2 { color:var(--white); font-size:17px; font-weight:700; margin:0; }
+.sticky-header small { color:rgba(255,255,255,0.6); font-size:12px; }
+.back-btn { background:none; border:none; color:var(--white); font-size:22px; padding:4px; }
+
+.summary-bar { background:var(--white); padding:14px 20px; display:flex; justify-content:space-around; border-bottom:2px solid var(--gray200); position:sticky; top:62px; z-index:99; }
+.stat-badge { text-align:center; }
+.stat-badge .num { font-size:22px; font-weight:900; font-variant-numeric:tabular-nums; }
+.stat-badge .label { font-size:11px; color:var(--gray500); margin-top:2px; }
+
+/* ─────────────────────── DEALER CARD ────────────────────────── */
+.dealer-card { background:var(--white); border-radius:16px; padding:16px; margin-bottom:12px; border:1px solid var(--gray200); transition:all 0.2s; }
+.dealer-card.active { border:2px solid var(--blue-bright); box-shadow:0 2px 12px rgba(11,48,142,0.12); }
+.dealer-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.dealer-name { font-size:16px; font-weight:700; color:var(--navy); }
+.grade-tag { font-size:11px; padding:2px 8px; border-radius:100px; font-weight:500; display:inline-block; margin-left:8px; }
+.grade-concept { background:#e8eaf6; color:#283593; }
+.grade-sa { background:#fce4ec; color:#c62828; }
+.grade-a { background:#fff3e0; color:#e65100; }
+.grade-normal { background:var(--gray100); color:var(--gray700); }
+.registered-badge { background:var(--blue-light); color:var(--blue); font-size:12px; font-weight:700; padding:4px 10px; border-radius:100px; }
+
+.num-inputs { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:10px; }
+.num-input-label { font-size:11px; color:var(--gray500); margin-bottom:4px; text-align:center; }
+.num-input-wrap { display:flex; align-items:center; border:1px solid var(--gray200); border-radius:8px; overflow:hidden; }
+.num-input-wrap button { width:34px; height:38px; border:none; background:var(--gray100); font-size:18px; color:var(--gray700); display:flex; align-items:center; justify-content:center; }
+.num-input-wrap button.plus { color:var(--blue); }
+.num-input-wrap .val { flex:1; text-align:center; font-size:16px; font-weight:700; color:var(--navy); }
+
+.warning-box { background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:8px 12px; font-size:12px; color:#f57f17; margin-bottom:10px; }
+.note-input { width:100%; padding:10px 12px; border:1px solid var(--gray200); border-radius:8px; font-size:13px; color:var(--gray700); outline:none; }
+.note-input:focus { border-color:var(--blue); }
+
+/* ─────────────────────── SUBMIT FOOTER ──────────────────────── */
+.submit-footer { position:fixed; bottom:0; left:0; right:0; padding:12px 16px; background:var(--white); border-top:1px solid var(--gray200); box-shadow:0 -4px 16px rgba(0,0,0,0.08); }
+.submit-btn { width:100%; padding:14px; background:var(--blue); color:var(--white); border:none; border-radius:12px; font-size:16px; font-weight:700; }
+.submit-btn:disabled { opacity:0.5; }
+
+/* ─────────────────────── ADMIN ──────────────────────────────── */
+.admin-btn { background:var(--white); border:1px solid var(--gray300); color:var(--gray700); padding:12px 32px; border-radius:12px; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,0.06); transition:all 0.2s; }
+.admin-btn:hover { background:var(--blue-light); border-color:var(--blue); }
+.admin-total { background:linear-gradient(135deg, var(--blue), var(--navy)); margin:16px; border-radius:20px; padding:20px; color:var(--white); }
+.filter-chip { padding:6px 14px; border-radius:100px; font-size:12px; border:1px solid var(--gray300); background:var(--white); color:var(--gray700); transition:all 0.15s; }
+.filter-chip.active { background:var(--navy); color:var(--white); border-color:var(--navy); font-weight:600; }
+table { width:100%; border-collapse:collapse; font-size:12px; }
+th { padding:10px 8px; text-align:center; font-size:12px; font-weight:600; color:var(--gray700); white-space:nowrap; background:var(--gray50); }
+td { padding:10px 8px; text-align:center; white-space:nowrap; }
+
+/* ─────────────────────── TOAST ──────────────────────────────── */
+.toast { position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:9999; background:var(--green); color:var(--white); padding:12px 28px; border-radius:12px; font-size:15px; font-weight:500; box-shadow:0 8px 32px rgba(0,0,0,0.2); animation:slideDown 0.3s ease; }
+@keyframes slideDown { from { opacity:0; transform:translateX(-50%) translateY(-20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+/* ─────────────────────── LOADING ────────────────────────────── */
+.loading-screen { display:flex; align-items:center; justify-content:center; height:100vh; background:var(--blue); color:var(--white); }
+.spinner { width:32px; height:32px; border:3px solid rgba(255,255,255,0.2); border-top-color:var(--orange); border-radius:50%; animation:spin 0.8s linear infinite; margin:16px auto 0; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* ─────────────────────── CONFIG MODAL ───────────────────────── */
+.config-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; }
+.config-box { background:var(--white); border-radius:20px; padding:32px 24px; max-width:440px; width:100%; }
+.config-input { width:100%; padding:12px; border:2px solid var(--gray200); border-radius:10px; font-size:14px; margin:12px 0; font-family:monospace; }
+.config-input:focus { border-color:var(--blue); outline:none; }
+.config-save { width:100%; padding:14px; background:var(--blue); color:var(--white); border:none; border-radius:12px; font-size:16px; font-weight:700; margin-top:8px; }
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  VICTOR 新品展示會 — 線上登記表單 (Vanilla JS)               ║
+// ║  Backend: Google Sheets via Apps Script                      ║
+// ╚══════════════════════════════════════════════════════════════╝
+
+// ── API URL (從 localStorage 讀取，首次使用會提示輸入) ─────────
+let API_URL = localStorage.getItem("victor_api_url") || "";
+
+// ── Event Config ──────────────────────────────────────────────
+const EVENT = {
+  title: "2026 VICTOR 春夏新品展示會",
+  season: "27H1",
+  date: "2025/7/23（三）",
+  lunchVenue: "大直典華 · 豐FOOD海陸百匯餐廳(1F)",
+  exhibitVenue: "大直典華 · 花田盛事廳(6F)",
+  address: "台北市中山區植福路8號",
+  shuttleFrom: "台北車站東三門",
+  shuttleTimes: ["10:45", "11:15"],
+  shuttleReturn: "16:30",
+  schedule: [
+    { time: "11:30 - 13:30", item: "午宴" },
+    { time: "13:00 - 14:00", item: "接待/報到" },
+    { time: "14:00 - 15:00", item: "新品簡報" },
+    { time: "15:00 - 16:30", item: "產品展示 / 新品試打" },
+    { time: "16:30", item: "賦歸" },
+  ],
+};
+
+const REPS = [
+  { id:"kuo", name:"郭柔安" }, { id:"lin", name:"林洋州" },
+  { id:"li", name:"李威辰" }, { id:"he_gy", name:"何冠穎" },
+  { id:"he_lw", name:"何立偉" }, { id:"zheng", name:"鄭閎元" },
+  { id:"shi", name:"施伊騫" },
+];
+
+const GRADES = ["概念店","特A級店","A級店","一般店"];
+const SUBSIDY = { "概念店":4, "特A級店":4, "A級店":3, "一般店":2 };
+const GRADE_CLASS = { "概念店":"grade-concept", "特A級店":"grade-sa", "A級店":"grade-a", "一般店":"grade-normal" };
+
+// ── 經銷商主檔 (全部 205 家) ──────────────────────────────────
+const DEALERS = [
+  {code:"A-03",name:"裕興體育",grade:"一般店",rep:"郭柔安"},{code:"A-08",name:"理想體育",grade:"一般店",rep:"郭柔安"},{code:"H-01",name:"一鳴驚人",grade:"概念店",rep:"郭柔安"},{code:"A-25",name:"昇新體育",grade:"一般店",rep:"郭柔安"},{code:"A-28",name:"劍新",grade:"一般店",rep:"郭柔安"},{code:"A-32",name:"羽雁體育",grade:"特A級店",rep:"郭柔安"},{code:"K-05",name:"良辰擊時",grade:"特A級店",rep:"郭柔安"},{code:"A-35",name:"羽雁汐科體育",grade:"一般店",rep:"郭柔安"},{code:"B-25",name:"傑克體育",grade:"一般店",rep:"郭柔安"},{code:"E-28",name:"羽弦體育",grade:"一般店",rep:"郭柔安"},{code:"H-07",name:"北城體育",grade:"一般店",rep:"郭柔安"},{code:"H-09",name:"永青運動",grade:"一般店",rep:"郭柔安"},{code:"H-23",name:"和興浩克",grade:"一般店",rep:"郭柔安"},{code:"H-27",name:"悅民",grade:"一般店",rep:"郭柔安"},{code:"I-06",name:"丹寧赫",grade:"一般店",rep:"郭柔安"},{code:"J-03",name:"亞洲鐵人",grade:"一般店",rep:"郭柔安"},{code:"J-29",name:"中正體育",grade:"一般店",rep:"郭柔安"},{code:"J-33",name:"上壘",grade:"一般店",rep:"郭柔安"},{code:"J-35",name:"名家體育",grade:"一般店",rep:"郭柔安"},{code:"J-39",name:"立典體育",grade:"一般店",rep:"郭柔安"},{code:"J-55",name:"丹尼爾",grade:"一般店",rep:"郭柔安"},{code:"J-61",name:"心宇體育",grade:"一般店",rep:"郭柔安"},{code:"K-15",name:"華德體育",grade:"一般店",rep:"郭柔安"},{code:"K-30",name:"向前行(強健)",grade:"一般店",rep:"郭柔安"},{code:"K-43",name:"弘大體育",grade:"一般店",rep:"郭柔安"},{code:"K-48",name:"同悅實業",grade:"一般店",rep:"郭柔安"},{code:"K-51",name:"欣達體育",grade:"一般店",rep:"郭柔安"},{code:"K-54",name:"普羅博士",grade:"一般店",rep:"郭柔安"},{code:"K-56",name:"慶哲(成光)",grade:"一般店",rep:"郭柔安"},{code:"K-72",name:"南山企業",grade:"一般店",rep:"郭柔安"},{code:"K-76",name:"富暘體育",grade:"一般店",rep:"郭柔安"},{code:"K-81",name:"祐進",grade:"一般店",rep:"郭柔安"},{code:"K-83",name:"宙斯體育",grade:"一般店",rep:"郭柔安"},{code:"K-93",name:"勁丰",grade:"一般店",rep:"郭柔安"},{code:"K-95",name:"柒柒羽球館",grade:"一般店",rep:"郭柔安"},{code:"A-11",name:"金一體育",grade:"A級店",rep:"郭柔安"},{code:"H-15",name:"北泰企業",grade:"A級店",rep:"郭柔安"},{code:"H-20",name:"弘揚體育",grade:"A級店",rep:"郭柔安"},{code:"J-20",name:"雙劍體育",grade:"A級店",rep:"郭柔安"},{code:"J-32",name:"冠羽體育",grade:"A級店",rep:"郭柔安"},{code:"J-59",name:"世昕體育",grade:"A級店",rep:"郭柔安"},{code:"K-28",name:"華成體育",grade:"A級店",rep:"郭柔安"},{code:"K-40",name:"大自在",grade:"A級店",rep:"郭柔安"},{code:"K-52",name:"中原體育",grade:"A級店",rep:"郭柔安"},
+  {code:"M-02",name:"正羽體育",grade:"一般店",rep:"林洋州"},{code:"M-04",name:"頂天體育",grade:"一般店",rep:"林洋州"},{code:"M-11",name:"凱欣體育",grade:"A級店",rep:"林洋州"},{code:"M-12",name:"一心體育",grade:"一般店",rep:"林洋州"},{code:"N-01",name:"佳龍體育",grade:"A級店",rep:"林洋州"},{code:"N-05",name:"長盈體育運動",grade:"一般店",rep:"林洋州"},{code:"N-07",name:"馬吉運動",grade:"一般店",rep:"林洋州"},{code:"N-13",name:"易桓運動",grade:"一般店",rep:"林洋州"},{code:"N-21",name:"建成體育",grade:"一般店",rep:"林洋州"},{code:"N-23",name:"永育體育",grade:"一般店",rep:"林洋州"},{code:"O-08",name:"中友體育",grade:"一般店",rep:"林洋州"},{code:"O-09",name:"大動力",grade:"概念店",rep:"林洋州"},{code:"O-10",name:"大鷲實業",grade:"A級店",rep:"林洋州"},{code:"O-17",name:"立欣體育",grade:"一般店",rep:"林洋州"},{code:"O-18",name:"路寶體育用品",grade:"一般店",rep:"林洋州"},{code:"O-24",name:"永璨體育",grade:"一般店",rep:"林洋州"},{code:"O-27",name:"玉山體育",grade:"一般店",rep:"林洋州"},{code:"O-29",name:"羽海企業",grade:"一般店",rep:"林洋州"},{code:"O-30",name:"飛躍體育",grade:"A級店",rep:"林洋州"},{code:"O-32",name:"典將體育",grade:"A級店",rep:"林洋州"},{code:"O-34",name:"無差別體育",grade:"A級店",rep:"林洋州"},{code:"O-35",name:"三愛服裝",grade:"一般店",rep:"林洋州"},{code:"O-38",name:"佳青羽球",grade:"一般店",rep:"林洋州"},{code:"O-39",name:"台同運動",grade:"概念店",rep:"林洋州"},{code:"O-40",name:"昇活運動",grade:"一般店",rep:"林洋州"},{code:"O-42",name:"永盛體育",grade:"一般店",rep:"林洋州"},{code:"O-47",name:"宏明體育",grade:"一般店",rep:"林洋州"},{code:"O-48",name:"蓋強羽毛",grade:"一般店",rep:"林洋州"},{code:"O-49",name:"樂晴運動",grade:"一般店",rep:"林洋州"},{code:"O-53",name:"豐東羽球",grade:"一般店",rep:"林洋州"},{code:"O-59",name:"東原-福陞羽",grade:"一般店",rep:"林洋州"},{code:"O-60",name:"璞漾健康",grade:"一般店",rep:"林洋州"},{code:"O-62",name:"柏威運動",grade:"一般店",rep:"林洋州"},{code:"O-63",name:"金同利",grade:"一般店",rep:"林洋州"},{code:"O-65",name:"好神運動",grade:"一般店",rep:"林洋州"},{code:"O-68",name:"格志體育",grade:"A級店",rep:"林洋州"},{code:"O-71",name:"忠興羽球",grade:"一般店",rep:"林洋州"},{code:"O-79",name:"洲際羽球",grade:"一般店",rep:"林洋州"},{code:"O-82",name:"大地休閒",grade:"一般店",rep:"林洋州"},{code:"O-83",name:"精銳運動",grade:"一般店",rep:"林洋州"},{code:"O-84",name:"鷲屋",grade:"一般店",rep:"林洋州"},
+  {code:"B-08",name:"歐格",grade:"一般店",rep:"李威辰"},{code:"B-11",name:"北關",grade:"A級店",rep:"李威辰"},{code:"B-17",name:"上展",grade:"A級店",rep:"李威辰"},{code:"B-18",name:"奕媞",grade:"一般店",rep:"李威辰"},{code:"B-30",name:"北冠",grade:"A級店",rep:"李威辰"},{code:"D-07",name:"三陽社",grade:"一般店",rep:"李威辰"},{code:"D-08",name:"力揚體育",grade:"特A級店",rep:"李威辰"},{code:"D-11",name:"寰羽體育",grade:"A級店",rep:"李威辰"},{code:"D-12",name:"凱勝體育",grade:"概念店",rep:"李威辰"},{code:"E-05",name:"松山體育",grade:"A級店",rep:"李威辰"},{code:"E-20",name:"喬盛",grade:"一般店",rep:"李威辰"},{code:"G-21",name:"羚躍體育",grade:"一般店",rep:"李威辰"},{code:"G-29",name:"頂尖體育",grade:"A級店",rep:"李威辰"},{code:"H-11",name:"達人體育",grade:"A級店",rep:"李威辰"},{code:"K-13",name:"立人體育",grade:"一般店",rep:"李威辰"},{code:"K-20",name:"人人體育",grade:"一般店",rep:"李威辰"},{code:"K-33",name:"名將體育",grade:"一般店",rep:"李威辰"},{code:"K-37",name:"茂昇體育",grade:"一般店",rep:"李威辰"},{code:"K-41",name:"紅人體育",grade:"一般店",rep:"李威辰"},{code:"K-63",name:"索莎體育",grade:"概念店",rep:"李威辰"},{code:"K-66",name:"SOSA羽球",grade:"概念店",rep:"李威辰"},{code:"K-70",name:"捷豹",grade:"A級店",rep:"李威辰"},{code:"K-88",name:"五羽倫比",grade:"A級店",rep:"李威辰"},
+  {code:"P-11",name:"東立體育",grade:"A級店",rep:"何冠穎"},{code:"Q-02",name:"滾水(世大)",grade:"A級店",rep:"何冠穎"},{code:"Q-15",name:"羽鴻體育",grade:"特A級店",rep:"何冠穎"},{code:"Q-17",name:"南北體育",grade:"一般店",rep:"何冠穎"},{code:"R-33",name:"啟利體育",grade:"A級店",rep:"何冠穎"},{code:"R-46",name:"鳳西羽球",grade:"特A級店",rep:"何冠穎"},{code:"R-68",name:"帥宏",grade:"一般店",rep:"何冠穎"},{code:"R-75",name:"藏龍體育",grade:"一般店",rep:"何冠穎"},{code:"R-78",name:"健大體育",grade:"一般店",rep:"何冠穎"},{code:"S-39",name:"戴萌",grade:"概念店",rep:"何冠穎"},
+  {code:"T-01",name:"葉氏悟羽體育",grade:"一般店",rep:"何立偉"},{code:"T-02",name:"百勝運動",grade:"一般店",rep:"何立偉"},{code:"T-05",name:"捷新(健大)",grade:"A級店",rep:"何立偉"},{code:"T-10",name:"禾喬(佐佑)",grade:"概念店",rep:"何立偉"},{code:"T-19",name:"球友體育",grade:"一般店",rep:"何立偉"},{code:"T-22",name:"品超企業",grade:"一般店",rep:"何立偉"},{code:"T-23",name:"台大體育",grade:"一般店",rep:"何立偉"},{code:"T-35",name:"育成體育",grade:"一般店",rep:"何立偉"},{code:"T-37",name:"永承(明展)",grade:"一般店",rep:"何立偉"},{code:"T-39",name:"超強羽球",grade:"一般店",rep:"何立偉"},{code:"T-55",name:"蔡氏體育",grade:"概念店",rep:"何立偉"},{code:"T-60",name:"勝大體育",grade:"一般店",rep:"何立偉"},{code:"U-06",name:"大眾體育",grade:"一般店",rep:"何立偉"},{code:"U-07",name:"湖美",grade:"一般店",rep:"何立偉"},{code:"U-08",name:"百冠體育",grade:"A級店",rep:"何立偉"},{code:"U-22",name:"井力體育",grade:"一般店",rep:"何立偉"},{code:"U-26",name:"欣進企業社",grade:"一般店",rep:"何立偉"},{code:"V-02",name:"戰錘企業社",grade:"一般店",rep:"何立偉"},{code:"V-09",name:"東大登山",grade:"一般店",rep:"何立偉"},{code:"V-14",name:"冠軍體育",grade:"A級店",rep:"何立偉"},
+  {code:"B-02",name:"愛浪",grade:"一般店",rep:"鄭閎元"},{code:"B-35",name:"旗開",grade:"一般店",rep:"鄭閎元"},{code:"B-36",name:"MST山水星河",grade:"一般店",rep:"鄭閎元"},{code:"C-05",name:"鈞騰體育",grade:"一般店",rep:"鄭閎元"},{code:"C-07",name:"捷利體育",grade:"A級店",rep:"鄭閎元"},{code:"C-13",name:"安湧企業",grade:"一般店",rep:"鄭閎元"},{code:"C-15",name:"飛揚體育",grade:"一般店",rep:"鄭閎元"},{code:"C-18",name:"展育體育",grade:"一般店",rep:"鄭閎元"},{code:"C-21",name:"宏勝體育",grade:"一般店",rep:"鄭閎元"},{code:"C-33",name:"丘林",grade:"一般店",rep:"鄭閎元"},{code:"E-03",name:"鐵哥",grade:"A級店",rep:"鄭閎元"},{code:"E-06",name:"仟翔體育",grade:"概念店",rep:"鄭閎元"},{code:"F-09",name:"亨茂企業",grade:"一般店",rep:"鄭閎元"},{code:"F-11",name:"龍騰虎躍",grade:"A級店",rep:"鄭閎元"},{code:"F-17",name:"冠捷運動",grade:"A級店",rep:"鄭閎元"},{code:"F-24",name:"天晴體育",grade:"一般店",rep:"鄭閎元"},{code:"G-06",name:"永新體育",grade:"一般店",rep:"鄭閎元"},{code:"G-11",name:"肯奇體育",grade:"A級店",rep:"鄭閎元"},{code:"G-17",name:"北大體育",grade:"一般店",rep:"鄭閎元"},{code:"G-20",name:"羽人碼頭",grade:"一般店",rep:"鄭閎元"},{code:"G-23",name:"新航體育",grade:"A級店",rep:"鄭閎元"},{code:"G-25",name:"奧創體育",grade:"一般店",rep:"鄭閎元"},{code:"G-27",name:"吉茗商行",grade:"一般店",rep:"鄭閎元"},{code:"G-28",name:"羽球世家",grade:"A級店",rep:"鄭閎元"},{code:"I-04",name:"松發",grade:"一般店",rep:"鄭閎元"},{code:"I-05",name:"山水",grade:"A級店",rep:"鄭閎元"},{code:"I-07",name:"力得體育",grade:"一般店",rep:"鄭閎元"},{code:"I-15",name:"政大體育",grade:"一般店",rep:"鄭閎元"},{code:"K-74",name:"威達運動",grade:"一般店",rep:"鄭閎元"},{code:"K-79",name:"翌岑體育",grade:"一般店",rep:"鄭閎元"},{code:"K-87",name:"立哲",grade:"A級店",rep:"鄭閎元"},
+  {code:"Q-13",name:"大猛將",grade:"一般店",rep:"施伊騫"},{code:"R-01",name:"元元羽球",grade:"一般店",rep:"施伊騫"},{code:"R-04",name:"哈林體育",grade:"一般店",rep:"施伊騫"},{code:"R-05",name:"禾稼",grade:"一般店",rep:"施伊騫"},{code:"R-08",name:"健立體育",grade:"一般店",rep:"施伊騫"},{code:"R-12",name:"東尼運動",grade:"A級店",rep:"施伊騫"},{code:"R-13",name:"新力羽球",grade:"A級店",rep:"施伊騫"},{code:"R-14",name:"正展體育",grade:"一般店",rep:"施伊騫"},{code:"R-18",name:"不同凡響",grade:"一般店",rep:"施伊騫"},{code:"R-22",name:"南大體育",grade:"A級店",rep:"施伊騫"},{code:"R-34",name:"飛鷹體育",grade:"一般店",rep:"施伊騫"},{code:"R-35",name:"大都會",grade:"一般店",rep:"施伊騫"},{code:"R-41",name:"宏如事業有限",grade:"一般店",rep:"施伊騫"},{code:"R-51",name:"南區體育",grade:"一般店",rep:"施伊騫"},{code:"R-70",name:"豐嶸體育",grade:"一般店",rep:"施伊騫"},{code:"R-77",name:"羽國運動",grade:"概念店",rep:"施伊騫"},{code:"R-79",name:"名亨體育",grade:"一般店",rep:"施伊騫"},{code:"R-80",name:"宏達運動",grade:"一般店",rep:"施伊騫"},{code:"R-87",name:"教練先生",grade:"A級店",rep:"施伊騫"},{code:"R-95",name:"詠慶體育",grade:"一般店",rep:"施伊騫"},{code:"R-97",name:"有力",grade:"特A級店",rep:"施伊騫"},{code:"Y-19",name:"國隆體育",grade:"一般店",rep:"施伊騫"},{code:"Y-37",name:"聯亨體育",grade:"一般店",rep:"施伊騫"},
+];
+
+// ── State ─────────────────────────────────────────────────────
+let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all" };
+
+// ── API Helpers ───────────────────────────────────────────────
+async function apiLoad() {
+  if (!API_URL) return {};
+  try {
+    const res = await fetch(API_URL + "?action=load");
+    const data = await res.json();
+    return data.records || {};
+  } catch(e) { console.error("Load error:", e); return {}; }
+}
+
+async function apiSave(dealer, record) {
+  if (!API_URL) return;
+  try {
+    await fetch(API_URL, {
+      method:"POST",
+      headers:{"Content-Type":"text/plain"},
+      body: JSON.stringify({
+        action:"save",
+        code: dealer.code,
+        name: dealer.name,
+        grade: dealer.grade,
+        rep: dealer.rep,
+        subsidy: SUBSIDY[dealer.grade] || 2,
+        adults: record.adults || 0,
+        kids: record.kids || 0,
+        shuttle: record.shuttle || 0,
+        note: record.note || "",
+        updatedBy: state.rep?.name || ""
+      })
+    });
+  } catch(e) { console.error("Save error:", e); }
+}
+
+async function apiReset() {
+  if (!API_URL) return;
+  try { await fetch(API_URL, { method:"POST", headers:{"Content-Type":"text/plain"}, body:JSON.stringify({action:"reset"}) }); } catch(e) { console.error(e); }
+}
+
+// ── Render Engine ─────────────────────────────────────────────
+const $ = (sel) => document.querySelector(sel);
+const app = () => document.getElementById("app");
+
+function render() {
+  if (state.loading) { app().innerHTML = renderLoading(); return; }
+  if (!API_URL) { app().innerHTML = renderConfig(); return; }
+  switch(state.view) {
+    case "landing": app().innerHTML = renderLanding(); bindLanding(); break;
+    case "form": app().innerHTML = renderForm(); bindForm(); break;
+    case "admin": app().innerHTML = renderAdmin(); bindAdmin(); break;
+  }
+  if (state.toast) showToastEl(state.toast);
+}
+
+// ── Loading Screen ────────────────────────────────────────────
+function renderLoading() {
+  return `<div class="loading-screen"><div style="text-align:center">
+    <div style="font-size:32px;font-weight:900;letter-spacing:4px">VICTOR</div>
+    <div style="width:60px;height:3px;background:var(--orange);margin:10px auto"></div>
+    <div class="spinner"></div>
+  </div></div>`;
+}
+
+// ── Config Screen ─────────────────────────────────────────────
+function renderConfig() {
+  return `<div class="config-overlay"><div class="config-box">
+    <h2 style="color:var(--navy);font-size:20px;margin-bottom:8px">⚙️ 首次設定</h2>
+    <p style="color:var(--gray700);font-size:14px;line-height:1.6">請貼上 Google Apps Script 的網址<br><small style="color:var(--gray500)">（格式：https://script.google.com/macros/s/...../exec）</small></p>
+    <input class="config-input" id="apiInput" placeholder="https://script.google.com/macros/s/.../exec" value="${API_URL}">
+    <button class="config-save" id="configSave">儲存並開始使用</button>
+    <p style="margin-top:12px;font-size:11px;color:var(--gray500);text-align:center">此設定僅儲存在你的瀏覽器中</p>
+  </div></div>`;
+}
+
+// ── Banner SVG ────────────────────────────────────────────────
+function bannerSVG() {
+  return `<div class="banner"><svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#061428"/><stop offset="50%" stop-color="#0B308E"/><stop offset="100%" stop-color="#0d2460"/></linearGradient></defs>
+    <rect width="800" height="360" fill="url(#bg)"/>
+    <g opacity=".04" stroke="#fff" stroke-width=".5">${[...Array(17)].map((_,i)=>`<line x1="${i*50}" y1="0" x2="${i*50}" y2="360"/>`).join('')}${[...Array(8)].map((_,i)=>`<line x1="0" y1="${i*50}" x2="800" y2="${i*50}"/>`).join('')}</g>
+    <g opacity=".06" fill="#fff"><ellipse cx="680" cy="80" rx="60" ry="75" transform="rotate(-20 680 80)"/><ellipse cx="120" cy="300" rx="45" ry="55" transform="rotate(15 120 300)"/></g>
+    <line x1="0" y1="360" x2="320" y2="200" stroke="#EC6C00" stroke-width="1.5" opacity=".15"/>
+    <rect x="0" y="338" width="800" height="22" fill="#EC6C00"/>
+    <rect x="0" y="334" width="800" height="4" fill="#EC6C00" opacity=".3"/>
+    <text x="400" y="95" text-anchor="middle" font-family="'Arial Black','Impact',sans-serif" font-size="48" font-weight="900" letter-spacing="10" fill="#fff">VICTOR</text>
+    <text x="400" y="152" text-anchor="middle" font-family="'Arial Black','Impact',sans-serif" font-size="11" font-weight="900" letter-spacing="8" fill="#EC6C00" opacity=".7">READY TO WIN</text>
+    <line x1="320" y1="168" x2="480" y2="168" stroke="#fff" stroke-width=".8" opacity=".2"/>
+    <text x="400" y="205" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="30" font-weight="900" fill="#fff" letter-spacing="3">${EVENT.title}</text>
+    <text x="400" y="235" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="13" fill="#fff" opacity=".5" letter-spacing="2">經銷商用餐及接駁車線上登記</text>
+    <g transform="translate(400,275)"><rect x="-100" y="-18" width="200" height="36" rx="18" fill="rgba(255,255,255,.1)" stroke="rgba(255,255,255,.2)" stroke-width="1"/><text x="0" y="6" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="15" font-weight="600" fill="#fff">📅 ${EVENT.date}</text></g>
+    <rect x="0" y="0" width="4" height="60" fill="#EC6C00" opacity=".6"/><rect x="0" y="0" width="60" height="4" fill="#EC6C00" opacity=".6"/>
+    <rect x="796" y="0" width="4" height="60" fill="#EC6C00" opacity=".6"/><rect x="740" y="0" width="60" height="4" fill="#EC6C00" opacity=".6"/>
+  </svg></div>`;
+}
+
+// ── Landing Page ──────────────────────────────────────────────
+function renderLanding() {
+  return `<div style="min-height:100vh;background:var(--gray50)">
+    ${bannerSVG()}
+    <div class="card" style="margin-top:16px"><div class="card-pad">
+      <div class="section-label"><span>📍</span><span>活動地點</span></div>
+      <div style="margin-top:8px;font-size:14px;color:var(--gray700);line-height:1.8">
+        <div>午宴：${EVENT.lunchVenue}</div><div>展示會：${EVENT.exhibitVenue}</div>
+        <div style="font-size:12px;color:var(--gray500)">${EVENT.address}</div>
+      </div></div>
+      <div class="divider"></div>
+      <div class="card-pad"><div class="section-label"><span>🕐</span><span>活動流程</span></div>
+      <div style="margin-top:8px">${EVENT.schedule.map(s=>`<div style="display:flex;gap:12px;padding:6px 0;font-size:14px"><span style="color:var(--blue);font-weight:500;min-width:110px">${s.time}</span><span style="color:var(--gray700)">${s.item}</span></div>`).join('')}</div></div>
+      <div class="divider"></div>
+      <div class="card-pad"><div class="section-label"><span>🚌</span><span>接駁車</span></div>
+      <div style="margin-top:8px;font-size:14px;color:var(--gray700);line-height:1.8">
+        <div>上車地點：${EVENT.shuttleFrom}</div><div>去程班次：${EVENT.shuttleTimes.join(" / ")}</div><div>回程班次：${EVENT.shuttleReturn}</div>
+      </div></div>
+    </div>
+    <div class="card"><div class="card-pad">
+      <div class="section-label"><span>👤</span><span>選擇業務登記</span></div>
+      <p style="font-size:13px;color:var(--gray500);margin:8px 0 0">選擇你的名字，為負責的經銷商登記用餐及接駁車人數</p>
+      <div class="rep-grid">${REPS.map(r=>`<button class="rep-btn" data-rep="${r.id}">${r.name}</button>`).join('')}</div>
+    </div></div>
+    <div style="padding:0 16px 40px;text-align:center">
+      <button class="admin-btn" id="adminBtn">📊 管理後台（Timmy）</button>
+      <div style="margin-top:12px"><button id="configBtn" style="background:none;border:none;color:var(--gray500);font-size:11px;cursor:pointer">⚙️ 重新設定 API 網址</button></div>
+    </div>
+  </div>`;
+}
+
+function bindLanding() {
+  document.querySelectorAll('.rep-btn').forEach(btn => {
+    btn.onclick = () => { state.rep = REPS.find(r=>r.id===btn.dataset.rep); state.view="form"; render(); };
+  });
+  $('#adminBtn').onclick = () => { state.view="admin"; render(); };
+  $('#configBtn').onclick = () => { API_URL=""; render(); };
+}
+
+// ── Form Page ─────────────────────────────────────────────────
+function renderForm() {
+  const dealers = DEALERS.filter(d=>d.rep===state.rep.name).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade) || a.code.localeCompare(b.code));
+  const totals = dealers.reduce((a,d)=>{ const r=getRec(d.code); return { adults:a.adults+(r.adults||0), kids:a.kids+(r.kids||0), shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+((r.adults||0)+(r.kids||0)>0?1:0) }; }, {adults:0,kids:0,shuttle:0,reg:0});
+
+  return `<div style="min-height:100vh;background:var(--gray50)">
+    <div class="sticky-header"><button class="back-btn" id="backBtn">←</button><div><h2>${state.rep.name} 的經銷商</h2><small>${dealers.length} 家經銷商</small></div></div>
+    <div class="summary-bar">
+      <div class="stat-badge"><div class="num" style="color:var(--blue)">${totals.reg}<span style="font-size:13px;font-weight:400;color:var(--gray500)">/${dealers.length}</span></div><div class="label">已登記</div></div>
+      <div class="stat-badge"><div class="num" style="color:var(--orange)">${totals.adults}</div><div class="label">用餐大人</div></div>
+      <div class="stat-badge"><div class="num" style="color:#ffc107">${totals.kids}</div><div class="label">小孩</div></div>
+      <div class="stat-badge"><div class="num" style="color:var(--green)">${totals.shuttle}</div><div class="label">接駁車</div></div>
+    </div>
+    <div style="padding:12px 16px 80px">${dealers.map(d=>renderDealerCard(d)).join('')}</div>
+    <div class="submit-footer"><button class="submit-btn" id="refreshBtn">🔄 重新載入最新資料</button></div>
+  </div>`;
+}
+
+function renderDealerCard(d) {
+  const r = getRec(d.code); const sub = SUBSIDY[d.grade]||2; const total = (r.adults||0)+(r.kids||0); const over = total>sub;
+  return `<div class="dealer-card ${total>0?'active':''}" id="dc-${d.code}">
+    <div class="dealer-header"><div>
+      <span class="dealer-name">${d.name}</span><span class="grade-tag ${GRADE_CLASS[d.grade]}">${d.grade}</span>
+      <div style="font-size:12px;color:var(--gray500);margin-top:4px">${d.code}　補助 ${sub} 人</div>
+    </div>${total>0?'<span class="registered-badge">已登記</span>':''}</div>
+    <div class="num-inputs">
+      ${numInput(d.code,"adults","大人",r.adults||0)}
+      ${numInput(d.code,"kids","小孩",r.kids||0)}
+      ${numInput(d.code,"shuttle","接駁車",r.shuttle||0)}
+    </div>
+    ${over?`<div class="warning-box">⚠️ 超出補助 ${total-sub} 人，需補差額</div>`:''}
+    <input class="note-input" data-code="${d.code}" data-field="note" placeholder="備註（素食、自費、其他...）" value="${r.note||''}">
+  </div>`;
+}
+
+function numInput(code, field, label, val) {
+  return `<div><div class="num-input-label">${label}</div><div class="num-input-wrap">
+    <button data-code="${code}" data-field="${field}" data-delta="-1">−</button>
+    <div class="val" id="val-${code}-${field}">${val}</div>
+    <button class="plus" data-code="${code}" data-field="${field}" data-delta="1">+</button>
+  </div></div>`;
+}
+
+function bindForm() {
+  $('#backBtn').onclick = () => { state.view="landing"; render(); };
+  $('#refreshBtn').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); };
+  document.querySelectorAll('.num-input-wrap button').forEach(btn => {
+    btn.onclick = async () => {
+      const {code,field,delta} = btn.dataset;
+      const rec = getRec(code);
+      rec[field] = Math.max(0, (rec[field]||0) + Number(delta));
+      state.records[code] = rec;
+      const dealer = DEALERS.find(d=>d.code===code);
+      await apiSave(dealer, rec);
+      render();
+    };
+  });
+  document.querySelectorAll('.note-input').forEach(inp => {
+    let timer;
+    inp.oninput = () => {
+      clearTimeout(timer);
+      const code = inp.dataset.code;
+      const rec = getRec(code);
+      rec.note = inp.value;
+      state.records[code] = rec;
+      timer = setTimeout(async () => {
+        const dealer = DEALERS.find(d=>d.code===code);
+        await apiSave(dealer, rec);
+      }, 800);
+    };
+  });
+}
+
+// ── Admin Page ────────────────────────────────────────────────
+function renderAdmin() {
+  const repStats = REPS.map(rep => {
+    const ds = DEALERS.filter(d=>d.rep===rep.name);
+    return ds.reduce((a,d)=>{ const r=getRec(d.code); const t=(r.adults||0)+(r.kids||0); return {...a, adults:a.adults+(r.adults||0), kids:a.kids+(r.kids||0), shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+(t>0?1:0) }; }, {name:rep.name, adults:0, kids:0, shuttle:0, reg:0, total:ds.length});
+  });
+  const grand = repStats.reduce((a,s)=>({total:a.total+s.adults+s.kids, adults:a.adults+s.adults, kids:a.kids+s.kids, shuttle:a.shuttle+s.shuttle, reg:a.reg+s.reg, dealers:a.dealers+s.total}), {total:0,adults:0,kids:0,shuttle:0,reg:0,dealers:0});
+
+  const filtered = (state.filterRep==="all"?DEALERS:DEALERS.filter(d=>d.rep===state.filterRep)).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade)||a.code.localeCompare(b.code));
+
+  return `<div style="min-height:100vh;background:var(--gray50)">
+    <div class="sticky-header" style="justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px"><button class="back-btn" id="backBtn">←</button><div><h2>管理後台</h2><small>${EVENT.season} 展示會</small></div></div>
+      <div style="display:flex;gap:8px">
+        <button id="refreshAdmin" style="background:var(--blue-bright);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px">🔄</button>
+        <button id="exportBtn" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500">📥 匯出</button>
+      </div>
+    </div>
+    <div class="admin-total">
+      <div style="font-size:13px;opacity:.7;margin-bottom:12px">全部登記總覽</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+        <div><div style="font-size:28px;font-weight:900">${grand.total}</div><div style="font-size:11px;opacity:.7">用餐總人數</div></div>
+        <div><div style="font-size:28px;font-weight:900">${grand.adults}</div><div style="font-size:11px;opacity:.7">大人</div></div>
+        <div><div style="font-size:28px;font-weight:900">${grand.kids}</div><div style="font-size:11px;opacity:.7">小孩</div></div>
+        <div><div style="font-size:28px;font-weight:900">${grand.shuttle}</div><div style="font-size:11px;opacity:.7">接駁車</div></div>
+      </div>
+      <div style="margin-top:12px;font-size:12px;opacity:.6;text-align:center">已登記 ${grand.reg}/${grand.dealers} 家（${grand.dealers>0?Math.round(grand.reg/grand.dealers*100):0}%）</div>
+    </div>
+    <div class="card"><div style="padding:14px 16px;border-bottom:1px solid var(--gray200)"><span style="font-weight:700;color:var(--navy);font-size:15px">各業務統計</span></div>
+    <div style="overflow-x:auto"><table><thead><tr><th>業務</th><th>登記</th><th>大人</th><th>小孩</th><th>接駁車</th></tr></thead><tbody>
+    ${repStats.map(s=>`<tr style="border-bottom:1px solid var(--gray100)"><td style="font-weight:600">${s.name}</td><td>${s.reg}/${s.total}</td><td>${s.adults}</td><td>${s.kids}</td><td>${s.shuttle}</td></tr>`).join('')}
+    </tbody></table></div></div>
+    <div style="margin:0 16px 12px;display:flex;gap:6px;flex-wrap:wrap">
+      <button class="filter-chip ${state.filterRep==='all'?'active':''}" data-filter="all">全部</button>
+      ${REPS.map(r=>`<button class="filter-chip ${state.filterRep===r.name?'active':''}" data-filter="${r.name}">${r.name}</button>`).join('')}
+    </div>
+    <div class="card" style="margin-bottom:40px"><div style="overflow-x:auto"><table><thead><tr><th>編號</th><th>客戶</th><th>級別</th><th>業務</th><th>補助</th><th>大人</th><th>小孩</th><th>接駁</th><th>備註</th></tr></thead><tbody>
+    ${filtered.map(d=>{ const r=getRec(d.code); const t=(r.adults||0)+(r.kids||0); const sub=SUBSIDY[d.grade]||2; const over=t>sub;
+      return `<tr style="border-bottom:1px solid var(--gray100);background:${t>0?'#f8fbff':'transparent'}">
+        <td style="font-size:11px">${d.code}</td><td style="font-weight:${t>0?600:400}">${d.name}</td><td style="font-size:11px">${d.grade}</td><td style="font-size:11px">${d.rep}</td><td>${sub}</td>
+        <td style="font-weight:700;color:${(r.adults||0)>0?'var(--blue)':'var(--gray300)'}">${r.adults||0}</td>
+        <td style="color:${(r.kids||0)>0?'var(--orange)':'var(--gray300)'}">${r.kids||0}</td>
+        <td style="color:${(r.shuttle||0)>0?'var(--green)':'var(--gray300)'}">${r.shuttle||0}</td>
+        <td style="font-size:11px;color:${over?'var(--red)':'var(--gray500)'}; max-width:100px;overflow:hidden;text-overflow:ellipsis">${over?'⚠️超額 ':''}${r.note||''}</td></tr>`;
+    }).join('')}
+    </tbody></table></div></div>
+  </div>`;
+}
+
+function bindAdmin() {
+  $('#backBtn').onclick = () => { state.view="landing"; render(); };
+  $('#refreshAdmin').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; state.view="admin"; render(); };
+  $('#exportBtn').onclick = exportCSV;
+  document.querySelectorAll('.filter-chip').forEach(c => {
+    c.onclick = () => { state.filterRep = c.dataset.filter; render(); };
+  });
+}
+
+function exportCSV() {
+  const BOM="\uFEFF";
+  const header="客戶編號,客戶簡稱,店級別,業務姓名,補助人數,報名人數,大人,小孩,接駁車人數,備註\n";
+  const rows=DEALERS.map(d=>{ const r=getRec(d.code); const sub=SUBSIDY[d.grade]||2;
+    return `${d.code},${d.name},${d.grade},${d.rep},${sub},${(r.adults||0)+(r.kids||0)},${r.adults||0},${r.kids||0},${r.shuttle||0},"${(r.note||'').replace(/"/g,'""')}"`;
+  }).join("\n");
+  const blob=new Blob([BOM+header+rows],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
+  a.download=`VICTOR_${EVENT.season}_展示會登記_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(a.href);
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function getRec(code) { return state.records[code] || {adults:0,kids:0,shuttle:0,note:""}; }
+
+function showToastEl(msg) {
+  const el = document.createElement("div"); el.className="toast"; el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>{ el.remove(); state.toast=null; },2500);
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function init() {
+  render(); // show loading or config
+  if (!API_URL) { state.loading=false; render(); return; }
+  // Listen for config save
+  document.addEventListener("click", async (e) => {
+    if (e.target.id === "configSave") {
+      const val = document.getElementById("apiInput").value.trim();
+      if (val) { API_URL=val; localStorage.setItem("victor_api_url", val); state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); }
+    }
+  });
+  state.records = await apiLoad();
+  state.loading = false;
+  render();
+}
+
+// Config save handler (delegated)
+document.addEventListener("click", async (e) => {
+  if (e.target.id === "configSave") {
+    const val = document.getElementById("apiInput")?.value?.trim();
+    if (val) { API_URL=val; localStorage.setItem("victor_api_url", val); state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); }
+  }
+});
+
+init();
+</script>
+</body>
+</html>
