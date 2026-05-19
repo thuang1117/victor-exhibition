@@ -510,16 +510,20 @@ function updateCardAndSummary(code) {
   const kids = totalKids(rec);
   const total = (rec.adults||0) + kids;
   // Update meal total in card
-  const mealEl = document.querySelector('.meal-total-' + code);
-  if (mealEl) mealEl.textContent = total;
+  const card = document.getElementById('dc-' + code);
+  if (card) {
+    const mealEl = card.querySelector('[class*="meal-total"]');
+    if (mealEl) mealEl.textContent = total;
+  }
   // Update warning
   const warnEl = document.getElementById('warn-' + code);
   if (warnEl) {
     if (total > sub) {
-      warnEl.style.display = '';
-      warnEl.textContent = '⚠️ 用餐人數超出補助 ' + (total - sub) + ' 人，超出部分需自費';
+      warnEl.style.display = 'block';
+      warnEl.innerHTML = '⚠️ 用餐人數超出補助 ' + (total - sub) + ' 人，超出部分需自費';
     } else {
       warnEl.style.display = 'none';
+      warnEl.innerHTML = '';
     }
   }
   // Update summary bar
