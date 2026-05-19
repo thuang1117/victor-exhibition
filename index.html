@@ -488,7 +488,7 @@ function renderDealerCard(d) {
         ${numInput(d.code,"shuttle","搭乘人數",r.shuttle||0)}
       </div>
     </div>
-    ${over?`<div class="warning-box" id="warn-${d.code}">⚠️ 用餐人數超出補助 ${total-sub} 人，超出部分需自費</div>`:'<div class="warning-box" id="warn-${d.code}" style="display:none"></div>'}
+    ${over?`<div class="warning-box" id="warn-${d.code}">⚠️ 用餐人數超出補助 ${total-sub} 人，超出部分需自費</div>`:`<div class="warning-box" id="warn-${d.code}" style="display:none"></div>`}
     <input class="note-input" data-code="${d.code}" data-field="note" placeholder="備註（素食、自費、其他...）" value="${r.note||''}">
   </div>`;
 }
