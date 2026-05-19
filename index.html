@@ -150,6 +150,10 @@ let API_URL = localStorage.getItem("victor_api_url") || "https://script.google.c
 // 已授權的 JavaScript 來源：https://thuang1117.github.io
 const GOOGLE_CLIENT_ID = "815722039173-bo7mf2i6lovtdjnt5jsrp8bhc4ogrsgq.apps.googleusercontent.com";
 
+// ── 管理後台密碼 ─────────────────────────────────────────────
+const ADMIN_PASSWORD = "2027";  // ← 可隨時修改
+let adminUnlocked = false;
+
 // ── Event Config ──────────────────────────────────────────────
 const EVENT = {
   title: "2027 VICTOR 春夏新品展示會",
@@ -434,7 +438,12 @@ function bindLanding() {
       btn.onclick = () => { state.rep = REPS.find(r=>r.id===btn.dataset.rep); state.view="form"; render(); };
     });
   }
-  $('#adminBtn').onclick = () => { state.view="admin"; render(); };
+  $('#adminBtn').onclick = () => {
+    if (adminUnlocked) { state.view="admin"; render(); return; }
+    const pw = prompt("請輸入管理後台密碼：");
+    if (pw === ADMIN_PASSWORD) { adminUnlocked = true; state.view="admin"; render(); }
+    else if (pw !== null) { alert("密碼錯誤"); }
+  };
   $('#configBtn').onclick = () => { API_URL=""; render(); };
 }
 
@@ -583,9 +592,14 @@ function bindForm() {
 function renderAdmin() {
   const repStats = REPS.map(rep => {
     const ds = DEALERS.filter(d=>d.rep===rep.name);
-    return ds.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); const t=(r.adults||0)+kids; return {...a, adults:a.adults+(r.adults||0), kids:a.kids+kids, kidA:a.kidA+(r.kidA||0), kidB:a.kidB+(r.kidB||0), kidC:a.kidC+(r.kidC||0), shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+(t>0?1:0) }; }, {name:rep.name, adults:0, kids:0, kidA:0, kidB:0, kidC:0, shuttle:0, reg:0, total:ds.length});
+    return ds.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); const t=(r.adults||0)+kids; return {...a, adults:a.adults+(r.adults||0), kids:a.kids+kids, kidA:a.kidA+(r.kidA||0), kidB:a.kidB+(r.kidB||0), kidC:a.kidC+(r.kidC||0), shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+(t>0?1:0), meal:a.meal+t }; }, {name:rep.name, adults:0, kids:0, kidA:0, kidB:0, kidC:0, shuttle:0, reg:0, meal:0, total:ds.length});
   });
-  const grand = repStats.reduce((a,s)=>({total:a.total+s.adults+s.kids, adults:a.adults+s.adults, kids:a.kids+s.kids, kidA:a.kidA+s.kidA, kidB:a.kidB+s.kidB, kidC:a.kidC+s.kidC, shuttle:a.shuttle+s.shuttle, reg:a.reg+s.reg, dealers:a.dealers+s.total}), {total:0,adults:0,kids:0,kidA:0,kidB:0,kidC:0,shuttle:0,reg:0,dealers:0});
+  const grand = repStats.reduce((a,s)=>({meal:a.meal+s.meal, adults:a.adults+s.adults, kids:a.kids+s.kids, kidA:a.kidA+s.kidA, kidB:a.kidB+s.kidB, kidC:a.kidC+s.kidC, shuttle:a.shuttle+s.shuttle, reg:a.reg+s.reg, dealers:a.dealers+s.total}), {meal:0,adults:0,kids:0,kidA:0,kidB:0,kidC:0,shuttle:0,reg:0,dealers:0});
+
+  // Bar chart data (7 reps + total)
+  const chartData = [...repStats.map(s=>({label:s.name.slice(0,1), fullName:s.name, reg:s.reg, total:s.total, pct:s.total>0?Math.round(s.reg/s.total*100):0})),
+    {label:"全", fullName:"總計", reg:grand.reg, total:grand.dealers, pct:grand.dealers>0?Math.round(grand.reg/grand.dealers*100):0}];
+  const maxTotal = Math.max(...chartData.map(d=>d.total), 1);
 
   const filtered = (state.filterRep==="all"?DEALERS:DEALERS.filter(d=>d.rep===state.filterRep)).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade)||a.code.localeCompare(b.code));
 
@@ -597,37 +611,99 @@ function renderAdmin() {
         <button id="exportBtn" style="background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:13px;font-weight:500">📥 匯出</button>
       </div>
     </div>
+
+    <!-- ═══ 總覽 ═══ -->
     <div class="admin-total">
       <div style="font-size:13px;opacity:.7;margin-bottom:12px">全部登記總覽</div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center">
-        <div><div style="font-size:28px;font-weight:900">${grand.total}</div><div style="font-size:11px;opacity:.7">用餐總人數</div></div>
-        <div><div style="font-size:28px;font-weight:900">${grand.adults}</div><div style="font-size:11px;opacity:.7">大人</div></div>
-        <div><div style="font-size:28px;font-weight:900">${grand.shuttle}</div><div style="font-size:11px;opacity:.7">接駁車</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;text-align:center">
+        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:16px">
+          <div style="font-size:36px;font-weight:900">${grand.meal}</div>
+          <div style="font-size:12px;opacity:.7;margin-top:4px">🍽️ 用餐總人數</div>
+        </div>
+        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:16px">
+          <div style="font-size:36px;font-weight:900">${grand.shuttle}</div>
+          <div style="font-size:12px;opacity:.7;margin-top:4px">🚌 接駁車總人數</div>
+        </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.15)">
-        <div><div style="font-size:20px;font-weight:700">${grand.kidA}</div><div style="font-size:10px;opacity:.6">80cm以下</div></div>
-        <div><div style="font-size:20px;font-weight:700">${grand.kidB}</div><div style="font-size:10px;opacity:.6">80-100cm</div></div>
-        <div><div style="font-size:20px;font-weight:700">${grand.kidC}</div><div style="font-size:10px;opacity:.6">100-140cm</div></div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)">
+        <div><div style="font-size:18px;font-weight:700">${grand.adults}</div><div style="font-size:10px;opacity:.5">大人</div></div>
+        <div><div style="font-size:18px;font-weight:700">${grand.kidA}</div><div style="font-size:10px;opacity:.5">80cm以下</div></div>
+        <div><div style="font-size:18px;font-weight:700">${grand.kidB}</div><div style="font-size:10px;opacity:.5">80-100cm</div></div>
+        <div><div style="font-size:18px;font-weight:700">${grand.kidC}</div><div style="font-size:10px;opacity:.5">100-140cm</div></div>
       </div>
       <div style="margin-top:12px;font-size:12px;opacity:.6;text-align:center">已登記 ${grand.reg}/${grand.dealers} 家（${grand.dealers>0?Math.round(grand.reg/grand.dealers*100):0}%）</div>
     </div>
+
+    <!-- ═══ 達標率柱狀圖 ═══ -->
+    <div class="card"><div style="padding:16px">
+      <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:16px">📊 各業務登記達標率</div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:180px;padding-bottom:30px;position:relative">
+        ${chartData.map((d,i)=>{
+          const isTotal = i === chartData.length-1;
+          const barColor = isTotal ? 'var(--orange)' : 'var(--blue)';
+          const barH = d.total > 0 ? Math.max(8, (d.total / maxTotal) * 130) : 8;
+          const fillH = d.total > 0 ? (d.reg / d.total) * barH : 0;
+          return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative">
+            <div style="font-size:11px;font-weight:700;color:${d.pct>=80?'var(--green)':d.pct>=50?'var(--orange)':'var(--red)'};margin-bottom:4px">${d.pct}%</div>
+            <div style="width:100%;max-width:40px;position:relative;height:${barH}px;background:var(--gray200);border-radius:4px;overflow:hidden">
+              <div style="position:absolute;bottom:0;width:100%;height:${fillH}px;background:${barColor};border-radius:4px;transition:height .3s"></div>
+            </div>
+            <div style="font-size:10px;color:var(--gray700);margin-top:6px;font-weight:${isTotal?700:400}">${d.fullName.slice(0,3)}</div>
+            <div style="font-size:9px;color:var(--gray500)">${d.reg}/${d.total}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--gray500)">
+        <span>🟩 ≥80%</span><span>🟧 ≥50%</span><span>🟥 <50%</span>
+      </div>
+    </div></div>
+
+    <!-- ═══ 各業務統計 ═══ -->
     <div class="card"><div style="padding:14px 16px;border-bottom:1px solid var(--gray200)"><span style="font-weight:700;color:var(--navy);font-size:15px">各業務統計</span></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>業務</th><th>登記</th><th>大人</th><th style="font-size:10px">80↓</th><th style="font-size:10px">80-100</th><th style="font-size:10px">100-140</th><th>接駁</th></tr></thead><tbody>
-    ${repStats.map(s=>`<tr style="border-bottom:1px solid var(--gray100)"><td style="font-weight:600">${s.name}</td><td>${s.reg}/${s.total}</td><td>${s.adults}</td><td>${s.kidA}</td><td>${s.kidB}</td><td>${s.kidC}</td><td>${s.shuttle}</td></tr>`).join('')}
+    <div style="overflow-x:auto"><table><thead><tr>
+      <th>業務</th><th>登記</th>
+      <th style="background:#E8F5E9;color:#2E7D32">用餐合計</th>
+      <th>大人</th><th style="font-size:10px">80↓</th><th style="font-size:10px">80-100</th><th style="font-size:10px">100-140</th>
+      <th style="background:#F3E5F5;color:#6A1B9A">接駁車</th>
+    </tr></thead><tbody>
+    ${repStats.map(s=>`<tr style="border-bottom:1px solid var(--gray100)">
+      <td style="font-weight:600">${s.name}</td>
+      <td>${s.reg}/${s.total}</td>
+      <td style="font-weight:700;background:#E8F5E9;color:#2E7D32">${s.meal}</td>
+      <td>${s.adults}</td><td>${s.kidA}</td><td>${s.kidB}</td><td>${s.kidC}</td>
+      <td style="font-weight:700;background:#F3E5F5;color:#6A1B9A">${s.shuttle}</td>
+    </tr>`).join('')}
+    <tr style="border-top:2px solid var(--gray300);font-weight:700">
+      <td>合計</td>
+      <td>${grand.reg}/${grand.dealers}</td>
+      <td style="background:#C8E6C9;color:#1B5E20">${grand.meal}</td>
+      <td>${grand.adults}</td><td>${grand.kidA}</td><td>${grand.kidB}</td><td>${grand.kidC}</td>
+      <td style="background:#E1BEE7;color:#4A148C">${grand.shuttle}</td>
+    </tr>
     </tbody></table></div></div>
+
+    <!-- ═══ 篩選 ═══ -->
     <div style="margin:0 16px 12px;display:flex;gap:6px;flex-wrap:wrap">
       <button class="filter-chip ${state.filterRep==='all'?'active':''}" data-filter="all">全部</button>
       ${REPS.map(r=>`<button class="filter-chip ${state.filterRep===r.name?'active':''}" data-filter="${r.name}">${r.name}</button>`).join('')}
     </div>
-    <div class="card" style="margin-bottom:40px"><div style="overflow-x:auto"><table><thead><tr><th>編號</th><th>客戶</th><th>級別</th><th>業務</th><th>補助</th><th>大人</th><th style="font-size:10px">80↓</th><th style="font-size:10px">80-100</th><th style="font-size:10px">100-140</th><th>接駁</th><th>備註</th></tr></thead><tbody>
+
+    <!-- ═══ 明細表 ═══ -->
+    <div class="card" style="margin-bottom:40px"><div style="overflow-x:auto"><table><thead><tr>
+      <th>編號</th><th>客戶</th><th>級別</th><th>業務</th><th>補助</th>
+      <th style="background:#E8F5E9;color:#2E7D32">用餐</th>
+      <th>大人</th><th style="font-size:10px">80↓</th><th style="font-size:10px">80-100</th><th style="font-size:10px">100-140</th>
+      <th style="background:#F3E5F5;color:#6A1B9A">接駁</th><th>備註</th>
+    </tr></thead><tbody>
     ${filtered.map(d=>{ const r=getRec(d.code); const kids=totalKids(r); const t=(r.adults||0)+kids; const sub=SUBSIDY[d.grade]||2; const over=t>sub;
       return `<tr style="border-bottom:1px solid var(--gray100);background:${t>0?'#f8fbff':'transparent'}">
         <td style="font-size:11px">${d.code}</td><td style="font-weight:${t>0?600:400}">${d.name}</td><td style="font-size:11px">${d.grade}</td><td style="font-size:11px">${d.rep}</td><td>${sub}</td>
+        <td style="font-weight:700;background:${t>0?'#E8F5E9':'transparent'};color:${t>0?'#2E7D32':'var(--gray300)'}">${t}</td>
         <td style="font-weight:700;color:${(r.adults||0)>0?'var(--blue)':'var(--gray300)'}">${r.adults||0}</td>
         <td style="color:${(r.kidA||0)>0?'var(--orange)':'var(--gray300)'}">${r.kidA||0}</td>
         <td style="color:${(r.kidB||0)>0?'var(--orange)':'var(--gray300)'}">${r.kidB||0}</td>
         <td style="color:${(r.kidC||0)>0?'var(--orange)':'var(--gray300)'}">${r.kidC||0}</td>
-        <td style="color:${(r.shuttle||0)>0?'var(--green)':'var(--gray300)'}">${r.shuttle||0}</td>
+        <td style="font-weight:700;background:${(r.shuttle||0)>0?'#F3E5F5':'transparent'};color:${(r.shuttle||0)>0?'#6A1B9A':'var(--gray300)'}">${r.shuttle||0}</td>
         <td style="font-size:11px;color:${over?'var(--red)':'var(--gray500)'}; max-width:100px;overflow:hidden;text-overflow:ellipsis">${over?'⚠️超額 ':''}${r.note||''}</td></tr>`;
     }).join('')}
     </tbody></table></div></div>
