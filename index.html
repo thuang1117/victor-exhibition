@@ -599,7 +599,6 @@ function renderAdmin() {
   // Bar chart data (7 reps + total)
   const chartData = [...repStats.map(s=>({label:s.name.slice(0,1), fullName:s.name, reg:s.reg, total:s.total, pct:s.total>0?Math.round(s.reg/s.total*100):0})),
     {label:"全", fullName:"總計", reg:grand.reg, total:grand.dealers, pct:grand.dealers>0?Math.round(grand.reg/grand.dealers*100):0}];
-  const maxTotal = Math.max(...chartData.map(d=>d.total), 1);
 
   const filtered = (state.filterRep==="all"?DEALERS:DEALERS.filter(d=>d.rep===state.filterRep)).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade)||a.code.localeCompare(b.code));
 
@@ -619,17 +618,17 @@ function renderAdmin() {
         <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:16px">
           <div style="font-size:36px;font-weight:900">${grand.meal}</div>
           <div style="font-size:12px;opacity:.7;margin-top:4px">🍽️ 用餐總人數</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.15)">
+            <div><div style="font-size:15px;font-weight:700">${grand.adults}</div><div style="font-size:9px;opacity:.5">大人</div></div>
+            <div><div style="font-size:15px;font-weight:700">${grand.kidA}</div><div style="font-size:9px;opacity:.5">80↓</div></div>
+            <div><div style="font-size:15px;font-weight:700">${grand.kidB}</div><div style="font-size:9px;opacity:.5">80-100</div></div>
+            <div><div style="font-size:15px;font-weight:700">${grand.kidC}</div><div style="font-size:9px;opacity:.5">100-140</div></div>
+          </div>
         </div>
-        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:16px">
+        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:16px;display:flex;flex-direction:column;align-items:center;justify-content:center">
           <div style="font-size:36px;font-weight:900">${grand.shuttle}</div>
           <div style="font-size:12px;opacity:.7;margin-top:4px">🚌 接駁車總人數</div>
         </div>
-      </div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)">
-        <div><div style="font-size:18px;font-weight:700">${grand.adults}</div><div style="font-size:10px;opacity:.5">大人</div></div>
-        <div><div style="font-size:18px;font-weight:700">${grand.kidA}</div><div style="font-size:10px;opacity:.5">80cm以下</div></div>
-        <div><div style="font-size:18px;font-weight:700">${grand.kidB}</div><div style="font-size:10px;opacity:.5">80-100cm</div></div>
-        <div><div style="font-size:18px;font-weight:700">${grand.kidC}</div><div style="font-size:10px;opacity:.5">100-140cm</div></div>
       </div>
       <div style="margin-top:12px;font-size:12px;opacity:.6;text-align:center">已登記 ${grand.reg}/${grand.dealers} 家（${grand.dealers>0?Math.round(grand.reg/grand.dealers*100):0}%）</div>
     </div>
@@ -641,8 +640,8 @@ function renderAdmin() {
         ${chartData.map((d,i)=>{
           const isTotal = i === chartData.length-1;
           const barColor = isTotal ? 'var(--orange)' : 'var(--blue)';
-          const barH = d.total > 0 ? Math.max(8, (d.total / maxTotal) * 130) : 8;
-          const fillH = d.total > 0 ? (d.reg / d.total) * barH : 0;
+          const barH = 130;
+          const fillH = d.total > 0 ? Math.round((d.reg / d.total) * barH) : 0;
           return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;position:relative">
             <div style="font-size:11px;font-weight:700;color:${d.pct>=80?'var(--green)':d.pct>=50?'var(--orange)':'var(--red)'};margin-bottom:4px">${d.pct}%</div>
             <div style="width:100%;max-width:40px;position:relative;height:${barH}px;background:var(--gray200);border-radius:4px;overflow:hidden">
@@ -655,6 +654,43 @@ function renderAdmin() {
       </div>
       <div style="display:flex;gap:16px;justify-content:center;margin-top:8px;font-size:11px;color:var(--gray500)">
         <span>🟩 ≥80%</span><span>🟧 ≥50%</span><span>🟥 <50%</span>
+      </div>
+    </div></div>
+
+    <!-- ═══ 已登記店家占比圓餅圖 ═══ -->
+    <div class="card"><div style="padding:16px">
+      <div style="font-weight:700;color:var(--navy);font-size:15px;margin-bottom:16px">🥧 已登記店家數量占比</div>
+      <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center">
+        <svg viewBox="0 0 200 200" width="180" height="180">
+          ${(()=>{
+            const pieColors = ['#0B308E','#EC6C00','#2E7D32','#6A1B9A','#C62828','#00838F','#F57F17','#455A64'];
+            const pieData = repStats.filter(s=>s.reg>0);
+            const totalReg = grand.reg || 1;
+            let cumAngle = 0;
+            if (pieData.length === 0) return '<circle cx="100" cy="100" r="80" fill="var(--gray200)"/><text x="100" y="105" text-anchor="middle" font-size="14" fill="var(--gray500)">尚無登記</text>';
+            return pieData.map((s,i)=>{
+              const pct = s.reg / totalReg;
+              const startAngle = cumAngle;
+              cumAngle += pct * 360;
+              const endAngle = cumAngle;
+              const start = polarToCartesian(100, 100, 80, startAngle);
+              const end = polarToCartesian(100, 100, 80, endAngle);
+              const large = pct > 0.5 ? 1 : 0;
+              const color = pieColors[i % pieColors.length];
+              if (pieData.length === 1) return '<circle cx="100" cy="100" r="80" fill="'+color+'"/>';
+              return '<path d="M100,100 L'+start.x+','+start.y+' A80,80 0 '+large+',1 '+end.x+','+end.y+' Z" fill="'+color+'"/>';
+            }).join('');
+          })()}
+        </svg>
+        <div style="display:flex;flex-direction:column;gap:6px">
+          ${(()=>{
+            const pieColors = ['#0B308E','#EC6C00','#2E7D32','#6A1B9A','#C62828','#00838F','#F57F17','#455A64'];
+            return repStats.map((s,i)=>{
+              const pct = grand.reg > 0 ? Math.round(s.reg / grand.reg * 100) : 0;
+              return '<div style="display:flex;align-items:center;gap:8px;font-size:12px"><div style="width:12px;height:12px;border-radius:2px;background:'+pieColors[i%pieColors.length]+';flex-shrink:0"></div><span style="color:var(--gray700)">'+s.name+'</span><span style="font-weight:700;color:var(--navy)">'+s.reg+'家</span><span style="color:var(--gray500)">('+pct+'%)</span></div>';
+            }).join('');
+          })()}
+        </div>
       </div>
     </div></div>
 
@@ -734,6 +770,10 @@ function exportCSV() {
 // ── Helpers ───────────────────────────────────────────────────
 function getRec(code) { return state.records[code] || {adults:0,kidA:0,kidB:0,kidC:0,shuttle:0,note:""}; }
 function totalKids(r) { return (r.kidA||0)+(r.kidB||0)+(r.kidC||0); }
+function polarToCartesian(cx, cy, r, angleDeg) {
+  const rad = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) };
+}
 
 function showToastEl(msg) {
   const el = document.createElement("div"); el.className="toast"; el.textContent=msg;
