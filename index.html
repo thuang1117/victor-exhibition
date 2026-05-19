@@ -7,6 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏸</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
 <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 /* ─────────────────────── VICTOR CI TOKENS ─────────────────────── */
 :root {
@@ -753,22 +754,105 @@ function renderAdmin() {
 function bindAdmin() {
   $('#backBtn').onclick = () => { state.view="landing"; render(); };
   $('#refreshAdmin').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; state.view="admin"; render(); };
-  $('#exportBtn').onclick = exportCSV;
+  $('#exportBtn').onclick = exportXLSX;
   document.querySelectorAll('.filter-chip').forEach(c => {
     c.onclick = () => { state.filterRep = c.dataset.filter; render(); };
   });
 }
 
-function exportCSV() {
-  const BOM="\uFEFF";
-  const header="客戶編號,客戶簡稱,店級別,業務姓名,補助人數,大人,小孩80cm以下,小孩80-100cm,小孩100-140cm,小孩合計,接駁車人數,備註\n";
-  const rows=DEALERS.map(d=>{ const r=getRec(d.code); const sub=SUBSIDY[d.grade]||2; const kids=totalKids(r);
-    return `${d.code},${d.name},${d.grade},${d.rep},${sub},${r.adults||0},${r.kidA||0},${r.kidB||0},${r.kidC||0},${kids},${r.shuttle||0},"${(r.note||'').replace(/"/g,'""')}"`;
-  }).join("\n");
-  const blob=new Blob([BOM+header+rows],{type:"text/csv;charset=utf-8"});
-  const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
-  a.download=`VICTOR_${EVENT.season}_展示會登記_${new Date().toISOString().slice(0,10)}.csv`;
-  a.click(); URL.revokeObjectURL(a.href);
+function exportXLSX() {
+  // Build data rows matching admin detail table: 編號/客戶/級別/業務/補助/用餐合計/大人/80↓/80-100/100-140/接駁車/備註
+  const headers = ["客戶編號","客戶簡稱","店級別","業務姓名","補助人數","用餐合計","大人","小孩80cm↓","小孩80-100cm","小孩100-140cm","接駁車人數","備註"];
+  const data = [headers];
+
+  DEALERS.forEach(d => {
+    const r = getRec(d.code);
+    const sub = SUBSIDY[d.grade] || 2;
+    const kids = totalKids(r);
+    const meal = (r.adults||0) + kids;
+    data.push([d.code, d.name, d.grade, d.rep, sub, meal, r.adults||0, r.kidA||0, r.kidB||0, r.kidC||0, r.shuttle||0, r.note||""]);
+  });
+
+  // Create workbook & worksheet
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(data);
+
+  // Column widths
+  ws['!cols'] = [
+    {wch:10},{wch:14},{wch:8},{wch:10},{wch:8},
+    {wch:10},{wch:8},{wch:12},{wch:14},{wch:14},{wch:12},{wch:20}
+  ];
+
+  // Style helpers
+  const greenFill = {fgColor:{rgb:"E8F5E9"}};
+  const greenFillDark = {fgColor:{rgb:"C8E6C9"}};
+  const purpleFill = {fgColor:{rgb:"F3E5F5"}};
+  const purpleFillDark = {fgColor:{rgb:"E1BEE7"}};
+  const headerFill = {fgColor:{rgb:"0B308E"}};
+  const headerFont = {color:{rgb:"FFFFFF"}, bold:true, sz:11};
+  const greenFont = {color:{rgb:"2E7D32"}, bold:true};
+  const purpleFont = {color:{rgb:"6A1B9A"}, bold:true};
+  const boldStyle = {bold:true};
+  const centerAlign = {horizontal:"center"};
+
+  // Apply header styles
+  for (let c = 0; c < headers.length; c++) {
+    const ref = XLSX.utils.encode_cell({r:0, c:c});
+    if (!ws[ref]) continue;
+    ws[ref].s = {
+      fill: (c === 5) ? {fgColor:{rgb:"2E7D32"}} : (c === 10) ? {fgColor:{rgb:"6A1B9A"}} : headerFill,
+      font: headerFont,
+      alignment: centerAlign
+    };
+  }
+
+  // Apply data row styles (col 5=用餐合計 green, col 10=接駁車 purple)
+  for (let r = 1; r < data.length; r++) {
+    for (let c = 0; c < headers.length; c++) {
+      const ref = XLSX.utils.encode_cell({r:r, c:c});
+      if (!ws[ref]) ws[ref] = {v: data[r][c], t: typeof data[r][c] === 'number' ? 'n' : 's'};
+      if (c === 5) {
+        ws[ref].s = { fill: greenFill, font: greenFont, alignment: centerAlign };
+      } else if (c === 10) {
+        ws[ref].s = { fill: purpleFill, font: purpleFont, alignment: centerAlign };
+      } else if (c <= 4 || (c >= 6 && c <= 9)) {
+        ws[ref].s = { alignment: centerAlign };
+      }
+    }
+  }
+
+  // Add totals row
+  const totalRow = data.length;
+  const repStatsForExport = REPS.map(rep => {
+    const ds = DEALERS.filter(d=>d.rep===rep.name);
+    return ds.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); return {...a, adults:a.adults+(r.adults||0), kidA:a.kidA+(r.kidA||0), kidB:a.kidB+(r.kidB||0), kidC:a.kidC+(r.kidC||0), shuttle:a.shuttle+(r.shuttle||0), meal:a.meal+(r.adults||0)+kids }; }, {adults:0,kidA:0,kidB:0,kidC:0,shuttle:0,meal:0});
+  });
+  const grandExport = repStatsForExport.reduce((a,s)=>({meal:a.meal+s.meal, adults:a.adults+s.adults, kidA:a.kidA+s.kidA, kidB:a.kidB+s.kidB, kidC:a.kidC+s.kidC, shuttle:a.shuttle+s.shuttle}), {meal:0,adults:0,kidA:0,kidB:0,kidC:0,shuttle:0});
+
+  const totalData = ["合計","","","","", grandExport.meal, grandExport.adults, grandExport.kidA, grandExport.kidB, grandExport.kidC, grandExport.shuttle, ""];
+  XLSX.utils.sheet_add_aoa(ws, [totalData], {origin: totalRow});
+
+  // Style totals row
+  for (let c = 0; c < totalData.length; c++) {
+    const ref = XLSX.utils.encode_cell({r:totalRow, c:c});
+    if (!ws[ref]) ws[ref] = {v: totalData[c], t: typeof totalData[c] === 'number' ? 'n' : 's'};
+    const base = { font: boldStyle, alignment: centerAlign };
+    if (c === 5) {
+      ws[ref].s = { fill: greenFillDark, font: {...boldStyle, ...greenFont}, alignment: centerAlign };
+    } else if (c === 10) {
+      ws[ref].s = { fill: purpleFillDark, font: {...boldStyle, ...purpleFont}, alignment: centerAlign };
+    } else if (c === 0) {
+      ws[ref].s = { font: boldStyle };
+    } else {
+      ws[ref].s = base;
+    }
+  }
+
+  // Update range
+  ws['!ref'] = XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:totalRow, c:headers.length-1}});
+
+  XLSX.utils.book_append_sheet(wb, ws, "展示會登記");
+  XLSX.writeFile(wb, "VICTOR_" + EVENT.season + "_展示會登記_" + new Date().toISOString().slice(0,10) + ".xlsx");
 }
 
 // ── Helpers ───────────────────────────────────────────────────
