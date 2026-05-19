@@ -95,7 +95,23 @@ input { font-family:inherit; }
   .meal-grid { grid-template-columns:1fr 1fr; gap:6px; }
   .card-columns { flex-direction:column; gap:8px; }
   .shuttle-section { flex:unset; }
+  .banner svg { min-height:220px; }
 }
+
+/* ─────────────────────── SEARCH & FILTER ────────────────────── */
+.search-bar { display:flex; align-items:center; gap:8px; background:var(--white); border:2px solid var(--gray200); border-radius:12px; padding:10px 14px; margin-bottom:10px; transition:border-color .2s; }
+.search-bar:focus-within { border-color:var(--blue); }
+.search-bar input { flex:1; border:none; outline:none; font-size:14px; font-family:inherit; color:var(--gray900); background:transparent; }
+.search-bar input::placeholder { color:var(--gray500); }
+.search-icon { font-size:18px; color:var(--gray500); flex-shrink:0; }
+.grade-filters { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
+.grade-filter-btn { padding:6px 12px; border-radius:100px; font-size:12px; font-weight:500; border:1.5px solid var(--gray300); background:var(--white); color:var(--gray700); transition:all .15s; }
+.grade-filter-btn.active { color:var(--white); border-color:transparent; }
+.grade-filter-btn.g-all.active { background:var(--navy); }
+.grade-filter-btn.g-concept.active { background:#283593; }
+.grade-filter-btn.g-sa.active { background:#c62828; }
+.grade-filter-btn.g-a.active { background:#e65100; }
+.grade-filter-btn.g-normal.active { background:var(--gray700); }
 
 .warning-box { background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:8px 12px; font-size:12px; color:#f57f17; margin-bottom:10px; }
 .note-input { width:100%; padding:10px 12px; border:1px solid var(--gray200); border-radius:8px; font-size:13px; color:var(--gray700); outline:none; }
@@ -199,7 +215,7 @@ const DEALERS = [
 ];
 
 // ── State ─────────────────────────────────────────────────────
-let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all" };
+let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all", searchQuery:"", gradeFilter:"all" };
 
 // ── Google User ──────────────────────────────────────────────
 let googleUser = JSON.parse(localStorage.getItem("victor_google_user") || "null");
@@ -417,19 +433,25 @@ function renderLanding() {
 }
 
 function bindLanding() {
-  // Google Sign-In button
-  if (!googleUser && typeof google !== 'undefined' && google.accounts) {
-    const btnDiv = document.getElementById('googleLoginBtn');
-    if (btnDiv) {
-      google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleLogin
-      });
-      google.accounts.id.renderButton(btnDiv, {
-        theme: "outline", size: "large", width: 300, text: "signin_with", locale: "zh-TW"
-      });
+  // Google Sign-In button (with retry for mobile where script loads slowly)
+  function tryInitGoogleLogin(retries) {
+    if (!googleUser && typeof google !== 'undefined' && google.accounts && google.accounts.id) {
+      const btnDiv = document.getElementById('googleLoginBtn');
+      if (btnDiv) {
+        google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleLogin,
+          ux_mode: "popup"
+        });
+        google.accounts.id.renderButton(btnDiv, {
+          theme: "outline", size: "large", width: 300, text: "signin_with", locale: "zh-TW"
+        });
+      }
+    } else if (retries > 0 && !googleUser) {
+      setTimeout(() => tryInitGoogleLogin(retries - 1), 500);
     }
   }
+  tryInitGoogleLogin(10);
   // Logout
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) logoutBtn.onclick = googleLogout;
@@ -450,18 +472,45 @@ function bindLanding() {
 
 // ── Form Page ─────────────────────────────────────────────────
 function renderForm() {
-  const dealers = DEALERS.filter(d=>d.rep===state.rep.name).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade) || a.code.localeCompare(b.code));
-  const totals = dealers.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); return { adults:a.adults+(r.adults||0), kids:a.kids+kids, shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+((r.adults||0)+kids>0?1:0) }; }, {adults:0,kids:0,shuttle:0,reg:0});
+  const allDealers = DEALERS.filter(d=>d.rep===state.rep.name).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade) || a.code.localeCompare(b.code));
+  const totals = allDealers.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); return { adults:a.adults+(r.adults||0), kids:a.kids+kids, shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+((r.adults||0)+kids>0?1:0) }; }, {adults:0,kids:0,shuttle:0,reg:0});
+
+  // Apply search & grade filter
+  const q = state.searchQuery.toLowerCase().trim();
+  const gf = state.gradeFilter;
+  const dealers = allDealers.filter(d => {
+    const matchSearch = !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q);
+    const matchGrade = gf === "all" || d.grade === gf;
+    return matchSearch && matchGrade;
+  });
+
+  // Grade counts for filter badges
+  const gradeCounts = {};
+  GRADES.forEach(g => gradeCounts[g] = allDealers.filter(d=>d.grade===g).length);
 
   return `<div style="min-height:100vh;background:var(--gray50)">
-    <div class="sticky-header"><button class="back-btn" id="backBtn">←</button><div><h2>${state.rep.name} 的經銷商</h2><small>${dealers.length} 家經銷商</small></div></div>
+    <div class="sticky-header"><button class="back-btn" id="backBtn">←</button><div><h2>${state.rep.name} 的經銷商</h2><small>${allDealers.length} 家經銷商</small></div></div>
     <div class="summary-bar" id="summaryBar">
-      <div class="stat-badge"><div class="num" id="stat-reg" style="color:var(--blue)">${totals.reg}<span style="font-size:13px;font-weight:400;color:var(--gray500)">/${dealers.length}</span></div><div class="label">已登記</div></div>
+      <div class="stat-badge"><div class="num" id="stat-reg" style="color:var(--blue)">${totals.reg}<span style="font-size:13px;font-weight:400;color:var(--gray500)">/${allDealers.length}</span></div><div class="label">已登記</div></div>
       <div class="stat-badge"><div class="num" id="stat-adults" style="color:var(--orange)">${totals.adults}</div><div class="label">大人</div></div>
       <div class="stat-badge"><div class="num" id="stat-kids" style="color:#ffc107">${totals.kids}</div><div class="label">小孩</div></div>
       <div class="stat-badge"><div class="num" id="stat-shuttle" style="color:var(--green)">${totals.shuttle}</div><div class="label">接駁車</div></div>
     </div>
-    <div style="padding:12px 16px 80px">${dealers.map(d=>renderDealerCard(d)).join('')}</div>
+    <div style="padding:12px 16px 0">
+      <div class="search-bar">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="dealerSearch" placeholder="搜尋店名或代號..." value="${state.searchQuery}">
+      </div>
+      <div class="grade-filters">
+        <button class="grade-filter-btn g-all ${gf==='all'?'active':''}" data-grade="all">全部 ${allDealers.length}</button>
+        <button class="grade-filter-btn g-concept ${gf==='概念店'?'active':''}" data-grade="概念店">概念店 ${gradeCounts['概念店']||0}</button>
+        <button class="grade-filter-btn g-sa ${gf==='特A級店'?'active':''}" data-grade="特A級店">特A級 ${gradeCounts['特A級店']||0}</button>
+        <button class="grade-filter-btn g-a ${gf==='A級店'?'active':''}" data-grade="A級店">A級 ${gradeCounts['A級店']||0}</button>
+        <button class="grade-filter-btn g-normal ${gf==='一般店'?'active':''}" data-grade="一般店">一般 ${gradeCounts['一般店']||0}</button>
+      </div>
+      ${dealers.length === 0 ? '<div style="text-align:center;padding:40px 0;color:var(--gray500)">找不到符合條件的經銷商</div>' : ''}
+    </div>
+    <div style="padding:0 16px 80px">${dealers.map(d=>renderDealerCard(d)).join('')}</div>
     <div class="submit-footer"><button class="submit-btn" id="refreshBtn">🔄 重新載入最新資料</button></div>
   </div>`;
 }
@@ -541,8 +590,20 @@ function updateCardAndSummary(code) {
 }
 
 function bindForm() {
-  $('#backBtn').onclick = () => { state.view="landing"; render(); };
+  $('#backBtn').onclick = () => { state.searchQuery=""; state.gradeFilter="all"; state.view="landing"; render(); };
   $('#refreshBtn').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); };
+  // Search input
+  const searchInput = document.getElementById('dealerSearch');
+  if (searchInput) {
+    searchInput.oninput = () => { state.searchQuery = searchInput.value; render(); 
+      // Re-focus search input after render
+      setTimeout(()=>{ const si = document.getElementById('dealerSearch'); if(si){si.focus(); si.selectionStart=si.selectionEnd=si.value.length;} },0);
+    };
+  }
+  // Grade filter buttons
+  document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+    btn.onclick = () => { state.gradeFilter = btn.dataset.grade; render(); };
+  });
   // +/- buttons
   document.querySelectorAll('.num-input-wrap button').forEach(btn => {
     btn.onclick = () => {
