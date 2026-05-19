@@ -6,6 +6,7 @@
 <title>VICTOR 新品展示會 — 線上登記</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏸</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
 /* ─────────────────────── VICTOR CI TOKENS ─────────────────────── */
 :root {
@@ -144,6 +145,11 @@ td { padding:10px 8px; text-align:center; white-space:nowrap; }
 // ── API URL (從 localStorage 讀取，首次使用會提示輸入) ─────────
 let API_URL = localStorage.getItem("victor_api_url") || "https://script.google.com/macros/s/AKfycbzjX3AlOTXvDFXndguyMT5GUyMaS7U9QZXXLaY6_-275TVTR-qiHWDyUCM-Rwow99vAiQ/exec";
 
+// ── Google OAuth Client ID（需在 Google Cloud Console 建立）────
+// 步驟：console.cloud.google.com → API → 憑證 → OAuth 2.0 用戶端 ID → 網頁應用程式
+// 已授權的 JavaScript 來源：https://thuang1117.github.io
+const GOOGLE_CLIENT_ID = "YOUR_CLIENT_ID.apps.googleusercontent.com"; // ← 替換這裡
+
 // ── Event Config ──────────────────────────────────────────────
 const EVENT = {
   title: "2027 VICTOR 春夏新品展示會",
@@ -190,6 +196,31 @@ const DEALERS = [
 // ── State ─────────────────────────────────────────────────────
 let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all" };
 
+// ── Google User ──────────────────────────────────────────────
+let googleUser = JSON.parse(localStorage.getItem("victor_google_user") || "null");
+
+function decodeJwt(token) {
+  try {
+    const base64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(base64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+  } catch(e) { return null; }
+}
+
+function handleGoogleLogin(response) {
+  const payload = decodeJwt(response.credential);
+  if (payload) {
+    googleUser = { email: payload.email, name: payload.name, picture: payload.picture };
+    localStorage.setItem("victor_google_user", JSON.stringify(googleUser));
+    render();
+  }
+}
+
+function googleLogout() {
+  googleUser = null;
+  localStorage.removeItem("victor_google_user");
+  render();
+}
+
 // ── API Helpers ───────────────────────────────────────────────
 async function apiLoad() {
   if (!API_URL) return {};
@@ -219,6 +250,7 @@ async function apiSave(dealer, record) {
         kidC: record.kidC || 0,
         shuttle: record.shuttle || 0,
         note: record.note || "",
+        googleEmail: googleUser?.email || "",
         updatedBy: state.rep?.name || ""
       })
     });
@@ -352,9 +384,25 @@ function renderLanding() {
       </div></div>
     </div>
     <div class="card"><div class="card-pad">
+      <div class="section-label"><span>🔐</span><span>登入 Google 帳號</span></div>
+      ${googleUser
+        ? `<div style="display:flex;align-items:center;gap:12px;margin-top:12px;padding:12px;background:var(--gray50);border-radius:10px">
+            <img src="${googleUser.picture || ''}" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--blue)" onerror="this.style.display='none'">
+            <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--navy)">${googleUser.name || ''}</div><div style="font-size:12px;color:var(--gray500)">${googleUser.email}</div></div>
+            <button id="logoutBtn" style="background:none;border:1px solid var(--gray300);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--gray700)">登出</button>
+          </div>`
+        : `<p style="font-size:13px;color:var(--gray500);margin:8px 0 12px">請先登入 Google 帳號，登記時會自動記錄更新者</p>
+          <div id="googleLoginBtn"></div>`
+      }
+    </div></div>
+    <div class="card"><div class="card-pad">
       <div class="section-label"><span>👤</span><span>選擇業務登記</span></div>
-      <p style="font-size:13px;color:var(--gray500);margin:8px 0 0">選擇你的名字，為負責的經銷商登記用餐及接駁車人數</p>
-      <div class="rep-grid">${REPS.map(r=>`<button class="rep-btn" data-rep="${r.id}">${r.name}</button>`).join('')}</div>
+      ${googleUser
+        ? `<p style="font-size:13px;color:var(--gray500);margin:8px 0 0">選擇你的名字，為負責的經銷商登記用餐及接駁車人數</p>
+          <div class="rep-grid">${REPS.map(r=>`<button class="rep-btn" data-rep="${r.id}">${r.name}</button>`).join('')}</div>`
+        : `<p style="font-size:13px;color:var(--gray500);margin:8px 0 0">⚠️ 請先登入 Google 帳號後才能進行登記</p>
+          <div class="rep-grid">${REPS.map(r=>`<button class="rep-btn" data-rep="${r.id}" disabled style="opacity:0.4;cursor:not-allowed">${r.name}</button>`).join('')}</div>`
+      }
     </div></div>
     <div style="padding:0 16px 40px;text-align:center">
       <button class="admin-btn" id="adminBtn">📊 管理後台（Timmy）</button>
@@ -364,9 +412,28 @@ function renderLanding() {
 }
 
 function bindLanding() {
-  document.querySelectorAll('.rep-btn').forEach(btn => {
-    btn.onclick = () => { state.rep = REPS.find(r=>r.id===btn.dataset.rep); state.view="form"; render(); };
-  });
+  // Google Sign-In button
+  if (!googleUser && typeof google !== 'undefined' && google.accounts) {
+    const btnDiv = document.getElementById('googleLoginBtn');
+    if (btnDiv) {
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleLogin
+      });
+      google.accounts.id.renderButton(btnDiv, {
+        theme: "outline", size: "large", width: 300, text: "signin_with", locale: "zh-TW"
+      });
+    }
+  }
+  // Logout
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) logoutBtn.onclick = googleLogout;
+  // Rep selection (only if logged in)
+  if (googleUser) {
+    document.querySelectorAll('.rep-btn').forEach(btn => {
+      btn.onclick = () => { state.rep = REPS.find(r=>r.id===btn.dataset.rep); state.view="form"; render(); };
+    });
+  }
   $('#adminBtn').onclick = () => { state.view="admin"; render(); };
   $('#configBtn').onclick = () => { API_URL=""; render(); };
 }
