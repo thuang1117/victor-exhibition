@@ -585,12 +585,37 @@ function updateCardAndSummary(code) {
   const sub = SUBSIDY[dealer.grade]||2;
   const kids = totalKids(rec);
   const total = (rec.adults||0) + kids;
-  // Update meal total in card
   const card = document.getElementById('dc-' + code);
+
   if (card) {
+    // Update meal total
     const mealEl = card.querySelector('[class*="meal-total"]');
     if (mealEl) mealEl.textContent = total;
+
+    // Update card active state + registered badge
+    if (total > 0) {
+      card.classList.add('active');
+      if (!card.querySelector('.registered-badge')) {
+        const header = card.querySelector('.dealer-header');
+        if (header) {
+          const badge = document.createElement('span');
+          badge.className = 'registered-badge';
+          badge.textContent = '已登記';
+          header.appendChild(badge);
+        }
+      }
+    } else {
+      card.classList.remove('active');
+      const badge = card.querySelector('.registered-badge');
+      if (badge) badge.remove();
+    }
+
+    // Handle status filter visibility
+    if (state.statusFilter === 'done' && total === 0) card.style.display = 'none';
+    else if (state.statusFilter === 'notdone' && total > 0) card.style.display = 'none';
+    else card.style.display = '';
   }
+
   // Update warning
   const warnEl = document.getElementById('warn-' + code);
   if (warnEl) {
@@ -602,6 +627,7 @@ function updateCardAndSummary(code) {
       warnEl.innerHTML = '';
     }
   }
+
   // Update summary bar
   const myDealers = DEALERS.filter(d=>d.rep===state.rep.name);
   const totals = myDealers.reduce((a,d)=>{ const r=getRec(d.code); const k=totalKids(r); return { adults:a.adults+(r.adults||0), kids:a.kids+k, shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+((r.adults||0)+k>0?1:0) }; }, {adults:0,kids:0,shuttle:0,reg:0});
@@ -613,6 +639,14 @@ function updateCardAndSummary(code) {
   if (adultsEl) adultsEl.textContent = totals.adults;
   if (kidsEl) kidsEl.textContent = totals.kids;
   if (shuttleEl) shuttleEl.textContent = totals.shuttle;
+
+  // Update status filter badge counts
+  const doneCount = myDealers.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
+  const notdoneCount = myDealers.length - doneCount;
+  const doneBtn = document.querySelector('[data-status="done"]');
+  const notdoneBtn = document.querySelector('[data-status="notdone"]');
+  if (doneBtn) doneBtn.textContent = '✅ 已登記 ' + doneCount;
+  if (notdoneBtn) notdoneBtn.textContent = '⬜ 未登記 ' + notdoneCount;
 }
 
 function bindForm() {
