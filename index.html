@@ -114,6 +114,8 @@ input { font-family:inherit; }
 .grade-filter-btn.g-sa.active { background:#c62828; }
 .grade-filter-btn.g-a.active { background:#e65100; }
 .grade-filter-btn.g-normal.active { background:var(--gray700); }
+.grade-filter-btn.g-done.active { background:#2E7D32; }
+.grade-filter-btn.g-notdone.active { background:#d32f2f; }
 
 .warning-box { background:#fff8e1; border:1px solid #ffe082; border-radius:8px; padding:8px 12px; font-size:12px; color:#f57f17; margin-bottom:10px; }
 .note-input { width:100%; padding:10px 12px; border:1px solid var(--gray200); border-radius:8px; font-size:13px; color:var(--gray700); outline:none; }
@@ -197,7 +199,7 @@ const EVENT = {
   schedule: [
     { time: "11:30 - 13:30", item: "午宴" },
     { time: "13:00 - 14:00", item: "接待/報到" },
-    { time: "13:00 - 16:30", item: "展廳開放時間" },
+    { time: "13:30 - 16:30", item: "展廳開放時間" },
     { time: "14:00 - 15:00", item: "新品簡報" },
     { time: "15:00 - 16:30", item: "產品展示" },
     { time: "16:30", item: "賦歸" },
@@ -227,7 +229,7 @@ const DEALERS = [
 ];
 
 // ── State ─────────────────────────────────────────────────────
-let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all", searchQuery:"", gradeFilter:"all" };
+let state = { view:"landing", rep:null, records:{}, loading:true, toast:null, filterRep:"all", searchQuery:"", gradeFilter:"all", statusFilter:"all" };
 
 // ── Google User ──────────────────────────────────────────────
 let googleUser = JSON.parse(localStorage.getItem("victor_google_user") || "null");
@@ -486,18 +488,26 @@ function renderForm() {
   const allDealers = DEALERS.filter(d=>d.rep===state.rep.name).sort((a,b)=>GRADES.indexOf(a.grade)-GRADES.indexOf(b.grade) || a.code.localeCompare(b.code));
   const totals = allDealers.reduce((a,d)=>{ const r=getRec(d.code); const kids=totalKids(r); return { adults:a.adults+(r.adults||0), kids:a.kids+kids, shuttle:a.shuttle+(r.shuttle||0), reg:a.reg+((r.adults||0)+kids>0?1:0) }; }, {adults:0,kids:0,shuttle:0,reg:0});
 
-  // Apply search & grade filter
+  // Apply search, grade & status filter
   const q = state.searchQuery.toLowerCase().trim();
   const gf = state.gradeFilter;
+  const sf = state.statusFilter;
   const dealers = allDealers.filter(d => {
     const matchSearch = !q || d.name.toLowerCase().includes(q) || d.code.toLowerCase().includes(q);
     const matchGrade = gf === "all" || d.grade === gf;
-    return matchSearch && matchGrade;
+    const r = getRec(d.code);
+    const hasReg = (r.adults||0) + totalKids(r) > 0;
+    const matchStatus = sf === "all" || (sf === "done" && hasReg) || (sf === "notdone" && !hasReg);
+    return matchSearch && matchGrade && matchStatus;
   });
 
   // Grade counts for filter badges
   const gradeCounts = {};
   GRADES.forEach(g => gradeCounts[g] = allDealers.filter(d=>d.grade===g).length);
+
+  // Status counts
+  const doneCount = allDealers.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
+  const notdoneCount = allDealers.length - doneCount;
 
   return `<div style="min-height:100vh;background:var(--gray50)">
     <div class="sticky-header"><button class="back-btn" id="backBtn">←</button><div><h2>${state.rep.name} 的經銷商</h2><small>${allDealers.length} 家經銷商</small></div></div>
@@ -518,6 +528,11 @@ function renderForm() {
         <button class="grade-filter-btn g-sa ${gf==='特A級店'?'active':''}" data-grade="特A級店">特A級 ${gradeCounts['特A級店']||0}</button>
         <button class="grade-filter-btn g-a ${gf==='A級店'?'active':''}" data-grade="A級店">A級 ${gradeCounts['A級店']||0}</button>
         <button class="grade-filter-btn g-normal ${gf==='一般店'?'active':''}" data-grade="一般店">一般 ${gradeCounts['一般店']||0}</button>
+      </div>
+      <div class="grade-filters">
+        <button class="grade-filter-btn g-all ${sf==='all'?'active':''}" data-status="all">全部狀態</button>
+        <button class="grade-filter-btn g-done ${sf==='done'?'active':''}" data-status="done">✅ 已登記 ${doneCount}</button>
+        <button class="grade-filter-btn g-notdone ${sf==='notdone'?'active':''}" data-status="notdone">⬜ 未登記 ${notdoneCount}</button>
       </div>
       ${dealers.length === 0 ? '<div style="text-align:center;padding:40px 0;color:var(--gray500)">找不到符合條件的經銷商</div>' : ''}
     </div>
@@ -601,7 +616,7 @@ function updateCardAndSummary(code) {
 }
 
 function bindForm() {
-  $('#backBtn').onclick = () => { state.searchQuery=""; state.gradeFilter="all"; state.view="landing"; render(); };
+  $('#backBtn').onclick = () => { state.searchQuery=""; state.gradeFilter="all"; state.statusFilter="all"; state.view="landing"; render(); };
   $('#refreshBtn').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); };
   // Search input (handles Chinese IME composition correctly)
   const searchInput = document.getElementById('dealerSearch');
@@ -633,8 +648,12 @@ function bindForm() {
     }
   }
   // Grade filter buttons
-  document.querySelectorAll('.grade-filter-btn').forEach(btn => {
+  document.querySelectorAll('.grade-filter-btn[data-grade]').forEach(btn => {
     btn.onclick = () => { state.gradeFilter = btn.dataset.grade; render(); };
+  });
+  // Status filter buttons
+  document.querySelectorAll('.grade-filter-btn[data-status]').forEach(btn => {
+    btn.onclick = () => { state.statusFilter = btn.dataset.status; render(); };
   });
   // +/- buttons
   document.querySelectorAll('.num-input-wrap button').forEach(btn => {
