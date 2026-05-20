@@ -505,9 +505,10 @@ function renderForm() {
   const gradeCounts = {};
   GRADES.forEach(g => gradeCounts[g] = allDealers.filter(d=>d.grade===g).length);
 
-  // Status counts
-  const doneCount = allDealers.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
-  const notdoneCount = allDealers.length - doneCount;
+  // Status counts (based on current grade filter)
+  const gradeFiltered = gf === "all" ? allDealers : allDealers.filter(d=>d.grade===gf);
+  const doneCount = gradeFiltered.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
+  const notdoneCount = gradeFiltered.length - doneCount;
 
   return `<div style="min-height:100vh;background:var(--gray50)">
     <div class="sticky-header"><button class="back-btn" id="backBtn">←</button><div><h2>${state.rep.name} 的經銷商</h2><small>${allDealers.length} 家經銷商</small></div></div>
@@ -640,9 +641,11 @@ function updateCardAndSummary(code) {
   if (kidsEl) kidsEl.textContent = totals.kids;
   if (shuttleEl) shuttleEl.textContent = totals.shuttle;
 
-  // Update status filter badge counts
-  const doneCount = myDealers.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
-  const notdoneCount = myDealers.length - doneCount;
+  // Update status filter badge counts (respect current grade filter)
+  const gf = state.gradeFilter;
+  const gradeFiltered = gf === "all" ? myDealers : myDealers.filter(d=>d.grade===gf);
+  const doneCount = gradeFiltered.filter(d=>{ const r=getRec(d.code); return (r.adults||0)+totalKids(r)>0; }).length;
+  const notdoneCount = gradeFiltered.length - doneCount;
   const doneBtn = document.querySelector('[data-status="done"]');
   const notdoneBtn = document.querySelector('[data-status="notdone"]');
   if (doneBtn) doneBtn.textContent = '✅ 已登記 ' + doneCount;
