@@ -96,6 +96,8 @@ input { font-family:inherit; }
   .card-columns { flex-direction:column; gap:8px; }
   .shuttle-section { flex:unset; }
   .banner svg { min-height:220px; }
+  .banner { font-size:0; } /* prevent inline spacing */
+  .banner svg text { transform-origin:center; }
 }
 
 /* ─────────────────────── SEARCH & FILTER ────────────────────── */
@@ -154,6 +156,16 @@ td { padding:10px 8px; text-align:center; white-space:nowrap; }
 <div id="app"></div>
 
 <script>
+// ── LINE Browser Detection: redirect to system browser ───────
+(function() {
+  const ua = navigator.userAgent || '';
+  if (/Line\//i.test(ua)) {
+    const url = location.href;
+    // Show a prompt to open in system browser
+    document.getElementById('app').innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;font-family:sans-serif;background:#0B308E;color:#fff;text-align:center"><div><div style="font-size:28px;font-weight:900;letter-spacing:4px;margin-bottom:12px">VICTOR</div><div style="width:50px;height:3px;background:#EC6C00;margin:0 auto 20px"></div><p style="font-size:15px;line-height:1.6;margin-bottom:20px">LINE 內建瀏覽器不支援 Google 登入<br>請用系統瀏覽器開啟</p><a href="' + url + '" target="_blank" style="display:inline-block;background:#EC6C00;color:#fff;padding:14px 32px;border-radius:12px;font-size:16px;font-weight:700;text-decoration:none">用瀏覽器開啟</a><p style="margin-top:16px;font-size:12px;opacity:.5">或複製網址到 Chrome / Safari 開啟</p><div style="margin-top:12px;background:rgba(255,255,255,.1);border-radius:8px;padding:10px;font-size:12px;word-break:break-all">' + url + '</div></div></div>';
+    return;
+  }
+})();
 // ╔══════════════════════════════════════════════════════════════╗
 // ║  VICTOR 新品展示會 — 線上登記表單 (Vanilla JS)               ║
 // ║  Backend: Google Sheets via Apps Script                      ║
@@ -322,7 +334,7 @@ function renderConfig() {
 const LOGO_B64 = "data:image/png;base64,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JTJqk8nkgG1CAdra2o5LkrS5aJTc7UbGGEsmk1lxbwdlE+/2OAEAXzl27Nh3165d+1mv13uzx+O5Upblizwej1d0GkQEwzAyhmEEdF0/ns1mjwSDwZe3bdsWER2UMcbLaV/x3a6uriBj7KpSdSPkHBgYGBPxMaf32rFjh2mT+RgA3NnS0nJJXV3d53w+341ut3sLY2yVtYP5mbeimyaYppk0TfOUrutvp9Pp37zwwgu/27lzZ94ms5MymAAAPT09u6LR6F48s/8bKyZjKBSK2s8V99m0adPrx48f3+TxeNyaVnrrQ0mSJK/Xy+dDv1vwY3DxlClUisn+/z7xBNl8numeqG2++MUveh5++OGVlZWVy5cuXepTFAXS6XRGUZTwtm3bwvYgPCLKu3btwt27d/PzTE/f86Cor6/33nHHHat8Pt/y5cuXe+LxOKiqmohEIuGPfexj4xOMePi5aNf5rk/EuxMBkpPhwfuwPooeEz04nZ47nQXwVtzS5XDyQrZeGclm0iiVcbAZvGfJ7aPEu32nG7suRw9KxBTLqSvaFIEgyu2oYidw8dJxW6dkC1Vm653Y8gQyEwRBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEARBEMQU+f+6Xu5jxZAapAAAAABJRU5ErkJggg==";
 function bannerSVG() {
   return `<div class="banner" style="position:relative">
-    <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
+    <svg viewBox="0 0 600 280" xmlns="http://www.w3.org/2000/svg" style="width:100%;display:block">
       <defs>
         <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stop-color="#071a3c"/>
@@ -331,56 +343,50 @@ function bannerSVG() {
         </linearGradient>
       </defs>
       <!-- Background -->
-      <rect width="800" height="340" fill="url(#bg)"/>
+      <rect width="600" height="280" fill="url(#bg)"/>
       <!-- Subtle grid -->
       <g opacity=".03" stroke="#fff" stroke-width=".5">
-        ${[...Array(17)].map((_,i)=>`<line x1="${i*50}" y1="0" x2="${i*50}" y2="340"/>`).join('')}
-        ${[...Array(7)].map((_,i)=>`<line x1="0" y1="${i*50}" x2="800" y2="${i*50}"/>`).join('')}
+        ${[...Array(13)].map((_,i)=>`<line x1="${i*50}" y1="0" x2="${i*50}" y2="280"/>`).join('')}
+        ${[...Array(6)].map((_,i)=>`<line x1="0" y1="${i*50}" x2="600" y2="${i*50}"/>`).join('')}
       </g>
       <!-- Decorative circles -->
-      <circle cx="620" cy="60" r="80" fill="#fff" opacity=".04"/>
-      <circle cx="680" cy="160" r="50" fill="#fff" opacity=".03"/>
-      <circle cx="160" cy="280" r="40" fill="#fff" opacity=".03"/>
+      <circle cx="480" cy="50" r="60" fill="#fff" opacity=".04"/>
+      <circle cx="520" cy="130" r="40" fill="#fff" opacity=".03"/>
       <!-- Diagonal accents -->
-      <line x1="0" y1="340" x2="280" y2="200" stroke="#EC6C00" stroke-width="1.5" opacity=".12"/>
-      <line x1="500" y1="340" x2="800" y2="160" stroke="#EC6C00" stroke-width="1" opacity=".08"/>
+      <line x1="0" y1="280" x2="200" y2="160" stroke="#EC6C00" stroke-width="1.5" opacity=".12"/>
       <!-- Orange bottom bar -->
-      <rect x="0" y="320" width="800" height="20" fill="#EC6C00"/>
-      <rect x="0" y="316" width="800" height="4" fill="#EC6C00" opacity=".3"/>
+      <rect x="0" y="262" width="600" height="18" fill="#EC6C00"/>
+      <rect x="0" y="258" width="600" height="4" fill="#EC6C00" opacity=".3"/>
 
       <!-- VICTOR Logo PNG (top-left) -->
-      <image href="${LOGO_B64}" x="16" y="12" width="140" height="48" preserveAspectRatio="xMidYMid meet"/>
+      <image href="${LOGO_B64}" x="12" y="10" width="120" height="42" preserveAspectRatio="xMidYMid meet"/>
 
-      <!-- Center content area (vertically centered between logo and orange bar) -->
-      <!-- Slogan -->
-      <text x="400" y="103" text-anchor="middle" font-family="'Arial Black','Impact',sans-serif" font-size="12" font-weight="900" letter-spacing="10" fill="#EC6C00" opacity=".8">
+      <!-- Center content area -->
+      <text x="300" y="80" text-anchor="middle" font-family="'Arial Black','Impact',sans-serif" font-size="13" font-weight="900" letter-spacing="8" fill="#EC6C00" opacity=".8">
         READY TO WIN
       </text>
-      <!-- Divider -->
-      <line x1="310" y1="120" x2="490" y2="120" stroke="#fff" stroke-width=".8" opacity=".25"/>
-      <!-- Event Title -->
-      <text x="400" y="163" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="32" font-weight="900" fill="#fff" letter-spacing="3">
+      <line x1="210" y1="96" x2="390" y2="96" stroke="#fff" stroke-width=".8" opacity=".25"/>
+      <text x="300" y="136" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="32" font-weight="900" fill="#fff" letter-spacing="2">
         ${EVENT.title}
       </text>
-      <!-- Subtitle -->
-      <text x="400" y="193" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="13" fill="#fff" opacity=".5" letter-spacing="2">
+      <text x="300" y="160" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="14" fill="#fff" opacity=".5" letter-spacing="1.5">
         經銷商午宴及接駁車線上登記
       </text>
       <!-- Date badge -->
-      <g transform="translate(400,233)">
-        <rect x="-100" y="-18" width="200" height="36" rx="18" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+      <g transform="translate(300,196)">
+        <rect x="-90" y="-17" width="180" height="34" rx="17" fill="rgba(255,255,255,.08)" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
         <text x="0" y="6" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="16" font-weight="600" fill="#fff">
           📅 ${EVENT.date}
         </text>
       </g>
       <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=2027+VICTOR+%E6%98%A5%E5%A4%8F%E6%96%B0%E5%93%81%E5%B1%95%E7%A4%BA%E6%9C%83&dates=20260805T033000Z/20260805T083000Z&details=%E5%8D%88%E5%AE%B4%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%B1%90FOOD%E6%B5%B7%E9%99%B8%E7%99%BE%E5%8C%AF%E9%A4%90%E5%BB%B3(1F)%0A%E5%B1%95%E7%A4%BA%E6%9C%83%EF%BC%9A%E5%A4%A7%E7%9B%B4%E5%85%B8%E8%8F%AF+%C2%B7+%E8%8A%B1%E7%94%B0%E7%9B%9B%E4%BA%8B%E5%BB%B3(6F)&location=%E5%8F%B0%E5%8C%97%E5%B8%82%E4%B8%AD%E5%B1%B1%E5%8D%80%E6%A4%8D%E7%A6%8F%E8%B7%AF8%E8%99%9F" target="_blank" style="cursor:pointer">
-        <text x="400" y="278" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="12" fill="#fff" opacity=".45" letter-spacing="1" text-decoration="underline">
+        <text x="300" y="238" text-anchor="middle" font-family="'Noto Sans TC',sans-serif" font-size="12" fill="#fff" opacity=".45" letter-spacing="1" text-decoration="underline">
           ＋加入行事曆
         </text>
       </a>
       <!-- Corner accents -->
-      <rect x="0" y="0" width="4" height="50" fill="#EC6C00" opacity=".7"/>
-      <rect x="0" y="0" width="170" height="4" fill="#EC6C00" opacity=".7"/>
+      <rect x="0" y="0" width="4" height="42" fill="#EC6C00" opacity=".7"/>
+      <rect x="0" y="0" width="140" height="4" fill="#EC6C00" opacity=".7"/>
     </svg>
   </div>`;
 }
@@ -412,8 +418,13 @@ function renderLanding() {
             <div style="flex:1"><div style="font-size:14px;font-weight:600;color:var(--navy)">${googleUser.name || ''}</div><div style="font-size:12px;color:var(--gray500)">${googleUser.email}</div></div>
             <button id="logoutBtn" style="background:none;border:1px solid var(--gray300);border-radius:8px;padding:6px 12px;font-size:12px;color:var(--gray700)">登出</button>
           </div>`
-        : `<p style="font-size:13px;color:var(--gray500);margin:8px 0 12px">請先登入 Google 帳號，登記時會自動記錄更新者</p>
-          <div id="googleLoginBtn"></div>`
+        : (navigator.userAgent.match(/Line/i)
+          ? `<div style="margin-top:12px;padding:14px;background:#fff3e0;border:1px solid #ffe082;border-radius:10px">
+              <div style="font-size:14px;font-weight:600;color:#e65100;margin-bottom:6px">⚠️ LINE 內建瀏覽器不支援 Google 登入</div>
+              <div style="font-size:13px;color:var(--gray700);line-height:1.6">請點右上角 ⋯ 選擇「<b>以預設瀏覽器開啟</b>」，<br>或複製網址到 Safari / Chrome 開啟</div>
+            </div>`
+          : `<p style="font-size:13px;color:var(--gray500);margin:8px 0 12px">請先登入 Google 帳號，登記時會自動記錄更新者</p>
+            <div id="googleLoginBtn"></div>`)
       }
     </div></div>
     <div class="card"><div class="card-pad">
@@ -592,13 +603,34 @@ function updateCardAndSummary(code) {
 function bindForm() {
   $('#backBtn').onclick = () => { state.searchQuery=""; state.gradeFilter="all"; state.view="landing"; render(); };
   $('#refreshBtn').onclick = async () => { state.loading=true; render(); state.records=await apiLoad(); state.loading=false; render(); };
-  // Search input
+  // Search input (handles Chinese IME composition correctly)
   const searchInput = document.getElementById('dealerSearch');
   if (searchInput) {
-    searchInput.oninput = () => { state.searchQuery = searchInput.value; render(); 
-      // Re-focus search input after render
-      setTimeout(()=>{ const si = document.getElementById('dealerSearch'); if(si){si.focus(); si.selectionStart=si.selectionEnd=si.value.length;} },0);
+    let isComposing = false;
+    let searchTimer;
+    searchInput.addEventListener('compositionstart', () => { isComposing = true; });
+    searchInput.addEventListener('compositionend', () => {
+      isComposing = false;
+      state.searchQuery = searchInput.value;
+      doSearchRender();
+    });
+    searchInput.oninput = () => {
+      if (isComposing) return; // skip during Chinese IME composition
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.searchQuery = searchInput.value;
+        doSearchRender();
+      }, 150);
     };
+    function doSearchRender() {
+      const val = searchInput.value;
+      const pos = searchInput.selectionStart;
+      render();
+      setTimeout(()=>{
+        const si = document.getElementById('dealerSearch');
+        if(si){ si.focus(); si.setSelectionRange(pos, pos); }
+      }, 0);
+    }
   }
   // Grade filter buttons
   document.querySelectorAll('.grade-filter-btn').forEach(btn => {
