@@ -262,8 +262,27 @@ async function apiLoad() {
   try {
     const res = await fetch(API_URL + "?action=load");
     const data = await res.json();
-    return data.records || {};
+    if (!data.records) return {};
+    // Validate: ensure shuttle is a number, not a string from misaligned columns
+    const records = data.records;
+    for (const code in records) {
+      const r = records[code];
+      r.adults = Number(r.adults) || 0;
+      r.kidA = Number(r.kidA) || 0;
+      r.kidB = Number(r.kidB) || 0;
+      r.kidC = Number(r.kidC) || 0;
+      r.shuttle = Number(r.shuttle) || 0;
+      r.note = String(r.note || "");
+    }
+    return records;
   } catch(e) { console.error("Load error:", e); return {}; }
+}
+
+// Debounced save — prevents race conditions from rapid clicking
+const _saveTimers = {};
+function debouncedSave(dealer, record) {
+  clearTimeout(_saveTimers[dealer.code]);
+  _saveTimers[dealer.code] = setTimeout(() => apiSave(dealer, record), 400);
 }
 
 async function apiSave(dealer, record) {
@@ -704,7 +723,7 @@ function bindForm() {
       if (inp) inp.value = rec[field];
       updateCardAndSummary(code);
       const dealer = DEALERS.find(d=>d.code===code);
-      apiSave(dealer, rec);
+      debouncedSave(dealer, rec);
     };
   });
   // Direct number input
@@ -721,7 +740,7 @@ function bindForm() {
       updateCardAndSummary(code);
       timer = setTimeout(() => {
         const dealer = DEALERS.find(d=>d.code===code);
-        apiSave(dealer, rec);
+        debouncedSave(dealer, rec);
       }, 600);
     };
   });
@@ -736,7 +755,7 @@ function bindForm() {
       state.records[code] = rec;
       timer = setTimeout(() => {
         const dealer = DEALERS.find(d=>d.code===code);
-        apiSave(dealer, rec);
+        debouncedSave(dealer, rec);
       }, 800);
     };
   });
